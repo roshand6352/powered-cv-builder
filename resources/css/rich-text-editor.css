@@ -1,0 +1,37 @@
+.cv-rich-text-field {
+    @apply rounded-lg border border-slate-300 bg-white shadow-sm overflow-hidden;
+}
+
+/* Safety net: never show stacked duplicate Quill toolbars */
+.cv-rich-text-field > .ql-toolbar ~ .ql-toolbar {
+    display: none !important;
+}
+
+.cv-rich-text-field .ql-toolbar.ql-snow {
+    @apply border-0 border-b border-slate-200 bg-slate-50 px-2 py-1;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.cv-rich-text-field .ql-container.ql-snow {
+    @apply border-0 text-sm;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.cv-rich-text-field .ql-editor {
+    @apply text-slate-800 leading-relaxed;
+    min-height: 8rem;
+}
+
+.cv-rich-text-field .ql-editor.ql-blank::before {
+    @apply text-slate-400 not-italic;
+}
+
+@media (max-width: 640px) {
+    .cv-rich-text-field .ql-toolbar.ql-snow {
+        @apply px-1;
+    }
+
+    .cv-rich-text-field .ql-toolbar .ql-formats {
+        margin-right: 0.25rem;
+    }
+}
