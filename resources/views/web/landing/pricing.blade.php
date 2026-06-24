@@ -6,7 +6,11 @@
         'description' => 'Choose the plan that fits your job search. Pay securely with PayFast.',
     ])
 
-    @include('web.landing.partials.pricing-plans', ['plans' => $plans, 'currentPlan' => $currentPlan ?? null])
+    @include('web.landing.partials.pricing-plans', [
+        'plans' => $plans,
+        'currentPlan' => $currentPlan ?? null,
+        'showAllPlansButton' => false,
+    ])
 
     <section class="page-section page-section--white">
         <div class="container">

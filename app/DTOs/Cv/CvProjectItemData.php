@@ -15,6 +15,7 @@ class CvProjectItemData implements Arrayable
         public string $url = '',
         public string $startDate = '',
         public string $endDate = '',
+        public bool $inProgress = false,
         public string $description = '',
     ) {}
 
@@ -33,6 +34,7 @@ class CvProjectItemData implements Arrayable
             url: (string) ($data['url'] ?? ''),
             startDate: (string) ($data['start_date'] ?? ''),
             endDate: (string) ($data['end_date'] ?? ''),
+            inProgress: (bool) ($data['in_progress'] ?? false),
             description: (string) ($data['description'] ?? ''),
         );
     }
@@ -45,6 +47,7 @@ class CvProjectItemData implements Arrayable
             'url' => $this->url,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
+            'in_progress' => $this->inProgress,
             'description' => $this->description,
         ];
     }

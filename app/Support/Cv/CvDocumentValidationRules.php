@@ -91,6 +91,7 @@ class CvDocumentValidationRules
             'json_data.education.*.field' => ['nullable', 'string', 'max:255'],
             'json_data.education.*.start_date' => ['nullable', 'string', 'max:50'],
             'json_data.education.*.end_date' => ['nullable', 'string', 'max:50'],
+            'json_data.education.*.in_progress' => ['nullable', 'boolean'],
             'json_data.education.*.description' => ['nullable', 'string', 'max:5000'],
         ];
     }
@@ -133,6 +134,7 @@ class CvDocumentValidationRules
             'json_data.projects.*.url' => ['nullable', 'string', 'max:255'],
             'json_data.projects.*.start_date' => ['nullable', 'string', 'max:50'],
             'json_data.projects.*.end_date' => ['nullable', 'string', 'max:50'],
+            'json_data.projects.*.in_progress' => ['nullable', 'boolean'],
             'json_data.projects.*.description' => ['nullable', 'string', 'max:5000'],
         ];
     }

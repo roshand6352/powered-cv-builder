@@ -53,7 +53,7 @@ class CoverLetterCvExtractor extends BaseService
                 'degree' => $item->degree,
                 'field' => $item->field,
                 'start_date' => $item->startDate,
-                'end_date' => $item->endDate,
+                'end_date' => $item->inProgress ? 'Present' : $item->endDate,
             ], array_slice($document->education, 0, 4)),
         ];
     }

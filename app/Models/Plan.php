@@ -15,6 +15,13 @@ class Plan extends Model
     use HasFactory;
     use SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $plan): void {
+            $plan->syncLegacyAccessFields();
+        });
+    }
+
     protected $fillable = [
         'name',
         'slug',
@@ -22,6 +29,11 @@ class Plan extends Model
         'description',
         'price',
         'currency',
+        'duration_type',
+        'duration_value',
+        'watermark_enabled',
+        'ai_enabled',
+        'cover_letter_enabled',
         'currency_symbol',
         'price_suffix',
         'ai_credits_limit',
@@ -59,6 +71,10 @@ class Plan extends Model
     {
         return [
             'price' => 'decimal:2',
+            'duration_value' => 'integer',
+            'watermark_enabled' => 'boolean',
+            'ai_enabled' => 'boolean',
+            'cover_letter_enabled' => 'boolean',
             'ai_credits_limit' => 'integer',
             'duration_hours' => 'integer',
             'duration_days' => 'integer',
@@ -118,6 +134,25 @@ class Plan extends Model
         return ! $this->isFree();
     }
 
+    public function hasAI(): bool
+    {
+        return (bool) ($this->ai_enabled ?? false);
+    }
+
+    public function hasCoverLetter(): bool
+    {
+        return (bool) ($this->cover_letter_enabled ?? false);
+    }
+
+    public function hasWatermark(): bool
+    {
+        if ($this->watermark_enabled !== null) {
+            return (bool) $this->watermark_enabled;
+        }
+
+        return (bool) $this->has_watermark;
+    }
+
     public function scopeCatalog(Builder $query): Builder
     {
         return $query->whereIn('slug', PlanSlug::catalogSlugs());
@@ -137,6 +172,19 @@ class Plan extends Model
     {
         if ($this->isLifetime()) {
             return 'lifetime';
+        }
+
+        if (filled($this->duration_type) && filled($this->duration_value)) {
+            $value = (int) $this->duration_value;
+
+            return match ($this->duration_type) {
+                'day' => $value === 1 ? 'day' : $value.' days',
+                'week' => $value === 1 ? 'week' : $value.' weeks',
+                'month' => $value === 1 ? 'month' : $value.' months',
+                'year' => $value === 1 ? 'year' : $value.' years',
+                'unlimited' => 'forever',
+                default => $this->duration_days ? $this->duration_days.' days' : 'forever',
+            };
         }
 
         if ($this->duration_hours) {
@@ -441,5 +489,42 @@ class Plan extends Model
         }
 
         return $iconType === 'star' ? 'pf-check orange' : 'pf-check';
+    }
+
+    protected function syncLegacyAccessFields(): void
+    {
+        if ($this->watermark_enabled !== null) {
+            $this->has_watermark = (bool) $this->watermark_enabled;
+        }
+
+        $type = $this->duration_type;
+        $value = $this->duration_value ? (int) $this->duration_value : null;
+
+        if ($type === 'unlimited') {
+            $this->is_lifetime = true;
+            $this->duration_hours = null;
+            $this->duration_days = null;
+
+            return;
+        }
+
+        $this->is_lifetime = false;
+
+        if (! $type || ! $value) {
+            return;
+        }
+
+        $this->duration_hours = null;
+        $this->duration_days = match ($type) {
+            'day' => $value,
+            'week' => $value * 7,
+            'month' => $value * 30,
+            'year' => $value * 365,
+            default => $this->duration_days,
+        };
+
+        if ($type === 'day' && $value === 1) {
+            $this->duration_hours = 24;
+        }
     }
 }

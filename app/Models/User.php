@@ -16,18 +16,14 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, HasMedia, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens;
     use HasFactory;
     use HasRoles;
-    use InteractsWithMedia;
     use LogsActivity;
     use Notifiable;
     use SoftDeletes;
@@ -40,6 +36,7 @@ class User extends Authenticatable implements FilamentUser, HasMedia, MustVerify
     protected $fillable = [
         'name',
         'email',
+        'profile_image',
         'google_id',
         'password',
         'plan_id',
@@ -123,6 +120,21 @@ class User extends Authenticatable implements FilamentUser, HasMedia, MustVerify
             ->first();
     }
 
+    public function hasAiAccess(): bool
+    {
+        return (bool) $this->activeSubscription()?->plan?->ai_enabled;
+    }
+
+    public function hasCoverLetterAccess(): bool
+    {
+        return (bool) $this->activeSubscription()?->plan?->cover_letter_enabled;
+    }
+
+    public function hasWatermarkOnPdf(): bool
+    {
+        return (bool) $this->activeSubscription()?->plan?->watermark_enabled;
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $panel->getId() === 'admin'
@@ -137,27 +149,18 @@ class User extends Authenticatable implements FilamentUser, HasMedia, MustVerify
             ->dontSubmitEmptyLogs();
     }
 
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('avatar')
-            ->singleFile()
-            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-    }
-
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        $this->addMediaConversion('thumb')
-            ->width(150)
-            ->height(150)
-            ->sharpen(10)
-            ->nonQueued();
-    }
-
     public function getAvatarUrlAttribute(): ?string
     {
-        $url = $this->getFirstMediaUrl('avatar', 'thumb');
+        if (blank($this->profile_image)) {
+            return null;
+        }
 
-        return $url !== '' ? $url : null;
+        return asset($this->profile_image);
+    }
+
+    public function hasProfilePhoto(): bool
+    {
+        return filled($this->profile_image);
     }
 
     public function getInitialsAttribute(): string

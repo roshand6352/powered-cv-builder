@@ -22,6 +22,7 @@ class PlanService extends BaseService
             fn () => Plan::query()
                 ->catalog()
                 ->active()
+                ->orderBy('price')
                 ->orderBy('sort_order')
                 ->get(),
         );
@@ -39,6 +40,7 @@ class PlanService extends BaseService
                 ->catalog()
                 ->active()
                 ->website()
+                ->orderBy('price')
                 ->orderBy('sort_order')
                 ->get(),
         );
@@ -68,7 +70,10 @@ class PlanService extends BaseService
         return Cache::remember(
             ApplicationCache::PLANS_PRO,
             now()->addMinutes(10),
-            fn () => Plan::query()->where('slug', PlanSlug::Pro->value)->firstOrFail(),
+            fn () => Plan::query()
+                ->whereIn('slug', [PlanSlug::Monthly->value, PlanSlug::Yearly->value, PlanSlug::Weekly->value, PlanSlug::Daily->value])
+                ->orderBy('sort_order')
+                ->firstOrFail(),
         );
     }
 }

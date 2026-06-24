@@ -1,4 +1,4 @@
-@props(['plans', 'currentPlan' => null])
+@props(['plans', 'currentPlan' => null, 'showAllPlansButton' => false])
 
 <section class="pricing" id="pricing">
     <div class="container">
@@ -93,5 +93,13 @@
                 </div>
             @endforeach
         </div>
+
+        @if ($showAllPlansButton)
+            <div style="margin-top:28px;text-align:center;">
+                <a href="{{ route('pricing') }}" class="btn btn-outline" style="justify-content:center;padding:14px 28px;">
+                    Show All Plans
+                </a>
+            </div>
+        @endif
     </div>
 </section>

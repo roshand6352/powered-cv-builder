@@ -5,7 +5,10 @@ namespace App\Enums;
 enum PlanSlug: string
 {
     case Free = 'free';
-    case Pro = 'pro';
+    case Daily = 'daily';
+    case Weekly = 'weekly';
+    case Monthly = 'monthly';
+    case Yearly = 'yearly';
 
     /**
      * @return list<string>

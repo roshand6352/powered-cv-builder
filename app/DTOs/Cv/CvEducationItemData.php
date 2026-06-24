@@ -16,6 +16,7 @@ class CvEducationItemData implements Arrayable
         public string $field = '',
         public string $startDate = '',
         public string $endDate = '',
+        public bool $inProgress = false,
         public string $description = '',
     ) {}
 
@@ -35,6 +36,7 @@ class CvEducationItemData implements Arrayable
             field: (string) ($data['field'] ?? ''),
             startDate: (string) ($data['start_date'] ?? ''),
             endDate: (string) ($data['end_date'] ?? ''),
+            inProgress: (bool) ($data['in_progress'] ?? false),
             description: (string) ($data['description'] ?? ''),
         );
     }
@@ -48,6 +50,7 @@ class CvEducationItemData implements Arrayable
             'field' => $this->field,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
+            'in_progress' => $this->inProgress,
             'description' => $this->description,
         ];
     }

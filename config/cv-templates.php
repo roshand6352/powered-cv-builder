@@ -271,4 +271,80 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | DomPDF-native CV templates (standalone blade renderers)
+    |--------------------------------------------------------------------------
+    */
+    'dompdf_templates' => [
+        'dompdf-professional-sidebar' => [
+            'name' => 'Professional Sidebar',
+            'description' => 'Modern corporate layout with dark sidebar — optimised for DomPDF export.',
+            'layout' => 'corporate',
+            'pdf_blade' => 'pdf.template-1',
+            'settings' => [
+                'accent' => '#0f2744',
+                'primary_color' => '#0f2744',
+                'secondary_color' => '#3b82f6',
+                'text_color' => '#1e293b',
+                'sidebar_background_color' => '#0f2744',
+                'font' => 'inter',
+                'sidebar_position' => 'left',
+                'photo_position' => 'sidebar',
+                'icons' => ['enabled' => false],
+                'typography' => [
+                    'font_size' => '14px',
+                    'heading_weight' => '700',
+                    'heading_style' => 'uppercase',
+                ],
+            ],
+        ],
+        'dompdf-executive-clean' => [
+            'name' => 'Executive Clean',
+            'description' => 'Minimalist executive style with full-width header and two-column body.',
+            'layout' => 'executive',
+            'pdf_blade' => 'pdf.template-2',
+            'settings' => [
+                'accent' => '#1d4ed8',
+                'primary_color' => '#1d4ed8',
+                'secondary_color' => '#3b82f6',
+                'text_color' => '#1a2332',
+                'font' => 'inter',
+                'sidebar_position' => 'none',
+                'photo_position' => 'hidden',
+                'icons' => ['enabled' => false],
+                'typography' => [
+                    'font_size' => '14px',
+                    'heading_weight' => '700',
+                    'heading_style' => 'uppercase',
+                ],
+            ],
+        ],
+        'dompdf-premium-ats' => [
+            'name' => 'Premium ATS',
+            'description' => 'Single-column ATS-optimised layout with bordered sections and multi-page support.',
+            'layout' => 'minimal',
+            'pdf_blade' => 'pdf.template-3',
+            'settings' => [
+                'accent' => '#111827',
+                'primary_color' => '#111827',
+                'secondary_color' => '#374151',
+                'text_color' => '#111827',
+                'font' => 'inter',
+                'sidebar_position' => 'none',
+                'photo_position' => 'top_right',
+                'icons' => ['enabled' => false],
+                'typography' => [
+                    'font_size' => '14px',
+                    'heading_weight' => '700',
+                    'heading_style' => 'uppercase',
+                ],
+                'borders' => [
+                    'style' => 'solid',
+                    'width' => '1px',
+                ],
+            ],
+        ],
+    ],
+
 ];

@@ -17,8 +17,11 @@ class MarketingController extends Controller
     ) {}
     public function home(): View
     {
+        $plans = $this->planService->websitePlans();
+
         return view('web.landing.home', [
-            'plans' => $this->planService->websitePlans(),
+            'plans' => $plans->take(3),
+            'hasMorePlans' => $plans->count() > 3,
             'seo' => [
                 'title' => 'ApplyDocs ZA — Free CV Builder for South Africa',
                 'description' => 'Build a professional, ATS-ready CV in minutes. Guided prompts, free download, and AI-powered writing for South African job seekers.',

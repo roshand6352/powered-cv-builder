@@ -15,19 +15,22 @@ class PrunePlansCommand extends Command
 {
     protected $signature = 'plans:prune {--force : Run without confirmation}';
 
-    protected $description = 'Keep only Free and Pro plans; remove all others and reassign related records';
+    protected $description = 'Keep only the seeded catalog plans and remove all others';
 
     /**
      * @var list<string>
      */
     protected array $keepSlugs = [
         'free',
-        'pro',
+        'daily',
+        'weekly',
+        'monthly',
+        'yearly',
     ];
 
     public function handle(): int
     {
-        if (! $this->option('force') && ! $this->confirm('This will delete all plans except Free and Pro. Continue?')) {
+        if (! $this->option('force') && ! $this->confirm('This will delete all plans except the seeded catalog plans. Continue?')) {
             $this->warn('Aborted.');
 
             return self::FAILURE;

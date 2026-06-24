@@ -161,7 +161,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.96);backdrop
 .pricing{padding:100px 0;background:white}
 .pricing-title{text-align:center;margin-bottom:10px}
 .pricing-sub{text-align:center;font-size:16px;color:var(--text-muted);margin-bottom:60px}
-.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;max-width:820px;margin:0 auto}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin:0 auto}
 .price-card{border:2px solid var(--border);border-radius:var(--radius-xl);padding:40px 36px}
 .price-card.pro{border-color:var(--plan-badge-color,var(--orange));position:relative}
 .pro-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--plan-badge-color,var(--orange));color:white;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:5px 16px;border-radius:20px;white-space:nowrap}
@@ -221,7 +221,8 @@ footer{background:var(--navy-dark);padding:64px 0 32px}
 @media(max-width:900px){
     .nav-links,.nav-actions{display:none}
     .nav-toggle{display:block}
-    .hero-grid,.tools-grid,.pricing-grid,.footer-top{grid-template-columns:1fr}
+    .hero-grid,.tools-grid,.footer-top{grid-template-columns:1fr}
+    .pricing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .hero{min-height:auto;padding:64px 0}
     .hero-visual{display:none}
     .pain-cards,.steps-grid,.testi-grid{grid-template-columns:1fr}
@@ -234,7 +235,7 @@ footer{background:var(--navy-dark);padding:64px 0 32px}
     .hero-ctas,.cta-btns{flex-direction:column;width:100%}
     .hero-ctas .btn,.cta-btns .btn{width:100%}
     .stats-grid{grid-template-columns:1fr}
-    .contact-grid,.plan-grid{grid-template-columns:1fr}
+    .contact-grid,.plan-grid,.pricing-grid{grid-template-columns:1fr}
 }
 
 /* Inner pages */

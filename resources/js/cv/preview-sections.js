@@ -27,16 +27,16 @@ function formatExperienceDates(item) {
 
 function formatEducationDates(item) {
     const start = item.start_date ?? '';
-    const end = item.end_date ?? '';
-    const hasRange = start && end;
+    const end = item.in_progress ? 'Present' : (item.end_date ?? '');
+    const hasRange = start && (end || item.in_progress);
 
     return `${escapeHtml(start)}${hasRange ? ' – ' : ''}${escapeHtml(end)}`;
 }
 
 function formatProjectDates(item) {
     const start = item.start_date ?? '';
-    const end = item.end_date ?? '';
-    const hasRange = start && end;
+    const end = item.in_progress ? 'Present' : (item.end_date ?? '');
+    const hasRange = start && (end || item.in_progress);
 
     return `${escapeHtml(start)}${hasRange ? ' – ' : ''}${escapeHtml(end)}`;
 }

@@ -232,7 +232,23 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700">End date</label>
-                            <input type="text" x-model="item.end_date" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <div class="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <input
+                                    type="text"
+                                    x-model="item.end_date"
+                                    :disabled="item.in_progress"
+                                    class="block w-full flex-1 rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 disabled:bg-slate-100"
+                                >
+                                <label class="inline-flex shrink-0 items-center gap-2 text-sm text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        x-model="item.in_progress"
+                                        @change="if (item.in_progress) item.end_date = ''"
+                                        class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                    >
+                                    In progress
+                                </label>
+                            </div>
                         </div>
                         <div class="sm:col-span-2">
                             <div class="flex items-start justify-between gap-3">
@@ -318,7 +334,23 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700">End date</label>
-                            <input type="text" x-model="item.end_date" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <div class="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <input
+                                    type="text"
+                                    x-model="item.end_date"
+                                    :disabled="item.in_progress"
+                                    class="block w-full flex-1 rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 disabled:bg-slate-100"
+                                >
+                                <label class="inline-flex shrink-0 items-center gap-2 text-sm text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        x-model="item.in_progress"
+                                        @change="if (item.in_progress) item.end_date = ''"
+                                        class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                    >
+                                    In progress
+                                </label>
+                            </div>
                         </div>
                         <div class="sm:col-span-2">
                             <div class="flex items-start justify-between gap-3">

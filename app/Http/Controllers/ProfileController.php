@@ -6,8 +6,10 @@ use App\Http\Requests\ProfilePhotoUpdateRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -33,10 +35,13 @@ class ProfileController extends Controller
     public function updatePhoto(ProfilePhotoUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
+        $file = $request->file('photo');
 
-        $user->clearMediaCollection('avatar');
-        $user->addMediaFromRequest('photo')
-            ->toMediaCollection('avatar');
+        $this->deleteProfileImage($user->profile_image);
+
+        $user->update([
+            'profile_image' => $this->storeProfileImage($file),
+        ]);
 
         return Redirect::route('dashboard.profile')->with('status', 'photo-updated');
     }
@@ -46,7 +51,13 @@ class ProfileController extends Controller
      */
     public function destroyPhoto(Request $request): RedirectResponse
     {
-        $request->user()->clearMediaCollection('avatar');
+        $user = $request->user();
+
+        $this->deleteProfileImage($user->profile_image);
+
+        $user->update([
+            'profile_image' => null,
+        ]);
 
         return Redirect::route('dashboard.profile')->with('status', 'photo-removed');
     }
@@ -62,7 +73,7 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        $user->clearMediaCollection('avatar');
+        $this->deleteProfileImage($user->profile_image);
 
         Auth::logout();
 
@@ -72,5 +83,33 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    protected function storeProfileImage(UploadedFile $file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+        $filename = now()->timestamp.'_'.Str::random(16).'.'.$extension;
+        $directory = public_path('profile-images');
+
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $file->move($directory, $filename);
+
+        return 'profile-images/'.$filename;
+    }
+
+    protected function deleteProfileImage(?string $relativePath): void
+    {
+        if (blank($relativePath)) {
+            return;
+        }
+
+        $fullPath = public_path($relativePath);
+
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+        }
     }
 }

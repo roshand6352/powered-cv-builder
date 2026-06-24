@@ -38,13 +38,18 @@ class PlanResource extends Resource
                 Forms\Components\TextInput::make('price')
                     ->label('Price amount')
                     ->numeric()
-                    ->required(),
+                    ->required()
+                    ->minValue(0)
+                    ->step('0.01'),
                 Forms\Components\TextInput::make('currency_symbol')
                     ->label('Currency symbol')
                     ->default('R')
+                    ->required()
                     ->maxLength(5),
                 Forms\Components\TextInput::make('currency')
                     ->default('ZAR')
+                    ->required()
+                    ->rule('size:3')
                     ->maxLength(3)
                     ->helperText('Internal currency code used for billing.'),
                 Forms\Components\TextInput::make('price_suffix')
@@ -184,21 +189,56 @@ class PlanResource extends Resource
             Forms\Components\Section::make('Subscription Settings')
                 ->description('Backend billing and access limits (not shown on the pricing card).')
                 ->schema([
+                    Forms\Components\Select::make('duration_type')
+                        ->label('Duration type')
+                        ->options([
+                            'unlimited' => 'Unlimited',
+                            'day' => 'Day',
+                            'week' => 'Week',
+                            'month' => 'Month',
+                            'year' => 'Year',
+                        ])
+                        ->native(false)
+                        ->live()
+                        ->default('month')
+                        ->required(),
+                    Forms\Components\TextInput::make('duration_value')
+                        ->label('Duration value')
+                        ->numeric()
+                        ->integer()
+                        ->minValue(1)
+                        ->required(fn (Forms\Get $get): bool => $get('duration_type') !== 'unlimited')
+                        ->hidden(fn (Forms\Get $get): bool => $get('duration_type') === 'unlimited'),
                     Forms\Components\TextInput::make('ai_credits_limit')
                         ->numeric()
-                        ->required(),
+                        ->required()
+                        ->minValue(0),
                     Forms\Components\TextInput::make('duration_hours')
                         ->numeric()
-                        ->label('Duration (hours)'),
+                        ->label('Duration (hours)')
+                        ->helperText('Legacy support field. Optional when using duration type/value.'),
                     Forms\Components\TextInput::make('duration_days')
                         ->numeric()
-                        ->label('Duration (days)'),
+                        ->label('Duration (days)')
+                        ->helperText('Legacy support field. Optional when using duration type/value.'),
                     Forms\Components\Toggle::make('is_lifetime')
-                        ->label('Lifetime access'),
+                        ->label('Lifetime access')
+                        ->default(false),
                     Forms\Components\Toggle::make('has_watermark')
+                        ->label('Legacy watermark flag')
                         ->default(true),
+                    Forms\Components\Toggle::make('watermark_enabled')
+                        ->label('Watermark enabled')
+                        ->default(true),
+                    Forms\Components\Toggle::make('ai_enabled')
+                        ->label('AI features enabled')
+                        ->default(false),
+                    Forms\Components\Toggle::make('cover_letter_enabled')
+                        ->label('Cover Letter Generator enabled')
+                        ->default(false),
                     Forms\Components\TextInput::make('billing_interval')
-                        ->default('monthly'),
+                        ->default('monthly')
+                        ->required(),
                 ])
                 ->columns(3)
                 ->collapsed(),
@@ -213,6 +253,11 @@ class PlanResource extends Resource
                 Tables\Columns\TextColumn::make('type_label')->label('Type')->toggleable(),
                 Tables\Columns\TextColumn::make('slug')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('price')->money('ZAR')->sortable(),
+                Tables\Columns\TextColumn::make('duration_type')->label('Duration Type')->toggleable(),
+                Tables\Columns\TextColumn::make('duration_value')->label('Duration Value')->toggleable(),
+                Tables\Columns\IconColumn::make('watermark_enabled')->boolean()->label('Watermark'),
+                Tables\Columns\IconColumn::make('ai_enabled')->boolean()->label('AI'),
+                Tables\Columns\IconColumn::make('cover_letter_enabled')->boolean()->label('Cover Letter'),
                 Tables\Columns\IconColumn::make('show_on_website')->boolean()->label('Website'),
                 Tables\Columns\IconColumn::make('is_featured')->boolean()->label('Highlight'),
                 Tables\Columns\IconColumn::make('show_badge')->boolean()->label('Badge'),

@@ -7,7 +7,7 @@
         <article class="cv-item">
             <div class="cv-item-head">
                 <div class="cv-item-title">{{ $item['name'] }}</div>
-                <div class="cv-item-meta">{{ $item['start_date'] ?? '' }}@if(($item['start_date'] ?? false) && ($item['end_date'] ?? false)) – @endif{{ $item['end_date'] ?? '' }}</div>
+                <div class="cv-item-meta">{{ $item['start_date'] ?? '' }}@if(($item['start_date'] ?? false) && (($item['end_date'] ?? false) || ($item['in_progress'] ?? false))) – @endif{{ ($item['in_progress'] ?? false) ? 'Present' : ($item['end_date'] ?? '') }}</div>
             </div>
             @if ($item['url'] ?? false)<div class="cv-item-subtitle">{{ $item['url'] }}</div>@endif
             @if ($item['description'] ?? false)<x-cv.render.rich-text :content="$item['description']" class="cv-item-text" />@endif

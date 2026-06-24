@@ -7,7 +7,8 @@ use App\Http\Controllers\CoverLetter\CoverLetterController;
 use App\Http\Controllers\Cv\CvPreviewController;
 use App\Http\Controllers\Cv\CreateCvFromTemplateController;
 use App\Http\Controllers\Cv\CvBuilderController;
-use App\Http\Controllers\Cv\CvController;
+use App\Http\Controllers\Cv\CvController as CvDraftController;
+use App\Http\Controllers\CvController as CvPdfController;
 use App\Http\Controllers\Cv\CvTemplateSelectionController;
 use App\Http\Controllers\Cv\CvTemplateRenderController;
 use App\Http\Controllers\Cv\CvTemplatePreviewController;
@@ -26,10 +27,14 @@ Route::get('/contact', [MarketingController::class, 'contact'])->name('contact')
 Route::get('/about', [MarketingController::class, 'about'])->name('about');
 Route::get('/privacy-policy', [MarketingController::class, 'privacy'])->name('privacy');
 Route::get('/terms', [MarketingController::class, 'terms'])->name('terms');
+Route::get('/cv/download', [CvPdfController::class, 'download'])->name('cv.download');
+Route::get('/cv/download/template-1', [CvPdfController::class, 'downloadTemplate1'])->name('cv.download.template-1');
+Route::get('/cv/download/template-2', [CvPdfController::class, 'downloadTemplate2'])->name('cv.download.template-2');
+Route::get('/cv/download/template-3', [CvPdfController::class, 'downloadTemplate3'])->name('cv.download.template-3');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/templates/{cvTemplate:slug}/use', CreateCvFromTemplateController::class)->name('templates.use');
-    Route::post('/cvs', [CvController::class, 'store'])->name('cvs.store');
+    Route::post('/cvs', [CvDraftController::class, 'store'])->name('cvs.store');
     Route::get('/cv/{cv}/preview', [CvPreviewController::class, 'show'])->name('cv.preview');
     Route::get('/cvs/{cv}/templates', [CvTemplateSelectionController::class, 'index'])->name('cvs.templates');
     Route::post('/cvs/{cv}/templates', [CvTemplateSelectionController::class, 'store'])->name('cvs.templates.store');

@@ -115,6 +115,7 @@ return [
             'field' => '',
             'start_date' => '',
             'end_date' => '',
+            'in_progress' => false,
             'description' => '',
         ],
         'skills' => [
@@ -133,6 +134,7 @@ return [
             'url' => '',
             'start_date' => '',
             'end_date' => '',
+            'in_progress' => false,
             'description' => '',
         ],
         'certifications' => [
@@ -182,6 +184,7 @@ return [
             'field' => '',
             'start_date' => '',
             'end_date' => '',
+            'in_progress' => false,
             'description' => '',
         ],
         'skills' => [
@@ -200,6 +203,7 @@ return [
             'url' => '',
             'start_date' => '',
             'end_date' => '',
+            'in_progress' => false,
             'description' => '',
         ],
         'references' => [
