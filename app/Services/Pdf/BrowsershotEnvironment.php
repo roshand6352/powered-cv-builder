@@ -83,6 +83,31 @@ class BrowsershotEnvironment extends BaseService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function diagnostics(): array
+    {
+        $node = $this->nodeBinary();
+        $npm = $this->npmBinary();
+        $chrome = $this->chromePath();
+
+        return [
+            'configured' => $this->isConfigured(),
+            'node_binary' => $node,
+            'node_exists' => $node ? File::exists($node) : false,
+            'npm_binary' => $npm,
+            'npm_exists' => $npm ? File::exists($npm) : false,
+            'chrome_path' => $chrome,
+            'chrome_exists' => $chrome ? File::exists($chrome) : false,
+            'node_module_path' => base_path('node_modules'),
+            'node_modules_exists' => File::isDirectory(base_path('node_modules')),
+            'puppeteer_installed' => File::isDirectory(base_path('node_modules/puppeteer')),
+            'os_family' => PHP_OS_FAMILY,
+            'no_sandbox' => PHP_OS_FAMILY === 'Windows' || (bool) config('browsershot.no_sandbox', false),
+        ];
+    }
+
+    /**
      * @param  list<string|null>  $paths
      */
     protected function firstExistingPath(array $paths): ?string

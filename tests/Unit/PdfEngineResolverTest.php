@@ -26,7 +26,7 @@ class PdfEngineResolverTest extends TestCase
         $this->assertSame('browsershot', $resolver->resolve());
     }
 
-    public function test_unknown_hosts_defaults_to_browsershot(): void
+    public function test_unknown_hosts_still_resolve_to_browsershot_for_pipeline_defaults(): void
     {
         Config::set('pdf.hosts', 'unknown');
 
