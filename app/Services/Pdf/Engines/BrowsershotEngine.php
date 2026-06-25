@@ -46,6 +46,8 @@ class BrowsershotEngine extends BaseService implements PdfEngineInterface
             : (string) config('browsershot.pdf.wait_until', 'load');
 
         $chromeArgs = [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--no-first-run',
