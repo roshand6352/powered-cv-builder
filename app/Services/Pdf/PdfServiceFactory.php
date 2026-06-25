@@ -4,6 +4,7 @@ namespace App\Services\Pdf;
 
 use App\Services\BaseService;
 use App\Services\Pdf\Contracts\PdfEngineInterface;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 /**
@@ -25,6 +26,15 @@ class PdfServiceFactory extends BaseService
         if ($hosts === PdfEngineResolver::ENGINE_DOMPDF) {
             return app(DompdfPdfService::class);
         }
+
+        Log::error('Unsupported PDF_HOSTS value configured.', [
+            'configured_value' => config('pdf.hosts'),
+            'normalized_value' => $hosts,
+            'supported_values' => [
+                PdfEngineResolver::ENGINE_BROWSERSHOT,
+                PdfEngineResolver::ENGINE_DOMPDF,
+            ],
+        ]);
 
         throw new RuntimeException(
             "Unsupported PDF_HOSTS value [{$hosts}]. Use PDF_HOSTS=browsershot or PDF_HOSTS=dompdf."
