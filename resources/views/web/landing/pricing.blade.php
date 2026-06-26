@@ -10,6 +10,7 @@
         'plans' => $plans,
         'currentPlan' => $currentPlan ?? null,
         'showAllPlansButton' => false,
+        'showCurrentPlanBadge' => true,
     ])
 
     <section class="page-section page-section--white">

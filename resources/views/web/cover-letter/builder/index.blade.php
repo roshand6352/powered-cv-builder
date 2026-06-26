@@ -252,7 +252,7 @@
             </section>
 
             {{-- Live preview --}}
-            <section class="relative min-h-0 flex-1 overflow-auto bg-slate-200 p-4 sm:p-8">
+            <section x-ref="previewPanel" class="relative min-h-0 flex-1 overflow-auto bg-slate-200 p-4 sm:p-8 [overflow-anchor:none]">
                 <div class="mx-auto w-[794px] max-w-full origin-top shadow-2xl">
                     <iframe
                         x-ref="preview"

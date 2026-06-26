@@ -27,7 +27,10 @@
             @endif
 
             @if ($isCurrent)
-                <span class="dash-badge-brand mb-3 w-fit">Current plan</span>
+                <span class="dash-badge-brand mb-3 w-fit">Current Plan</span>
+                @if (! empty($subscription['expires_at']) && ! ($subscription['plan']['is_lifetime'] ?? false) && ! ($subscription['plan']['is_free'] ?? false))
+                    <p class="mb-3 text-xs text-muted">Expires on: {{ \Illuminate\Support\Carbon::parse($subscription['expires_at'])->format('d M Y') }}</p>
+                @endif
             @endif
 
             <h3 class="text-lg font-semibold text-navy">{{ $plan->name }}</h3>
@@ -58,7 +61,7 @@
             <div class="mt-6">
                 @if ($isCurrent)
                     <button type="button" disabled class="w-full cursor-not-allowed rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-muted">
-                        Current plan
+                        Current Plan
                     </button>
                 @elseif ($action === 'downgrade' && $plan->isFree())
                     <form method="POST" action="{{ route('subscription.pay', $plan) }}">

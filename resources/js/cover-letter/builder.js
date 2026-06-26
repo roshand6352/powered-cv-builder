@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Alpine from 'alpinejs';
 import { prepareEditorHtml } from '../shared/rich-text-sanitize';
+import { applyCoverLetterPreviewPatch } from './preview-patcher';
 
 const CONTENT_FIELDS = [
     'company_name',
@@ -33,7 +34,6 @@ export function registerCoverLetterBuilder() {
         saveStatus: 'idle',
         saveError: null,
         isDirty: false,
-        previewLoading: false,
         aiLoading: false,
         aiError: null,
         pdfStatus: 'idle',
@@ -41,20 +41,31 @@ export function registerCoverLetterBuilder() {
 
         previewTimer: null,
         autosaveTimer: null,
+        localPreviewFrame: null,
+        serverPreviewDebounceMs: 900,
+        previewFrameReady: false,
+        lastPreviewHtml: '',
+        previewRequestId: 0,
+        previewAbortController: null,
+        previewTemplateKey: '',
 
         init() {
-            this.refreshPreview();
+            this.previewTemplateKey = this.template;
+            this.refreshPreview({ forceFull: true });
         },
 
         onInput() {
             this.isDirty = true;
-            this.schedulePreview();
+            this.applyLocalPreview();
+            this.scheduleServerPreview();
             this.scheduleAutosave();
         },
 
         onTemplateChange() {
             this.isDirty = true;
-            this.refreshPreview();
+            this.previewTemplateKey = this.template;
+            this.lastPreviewHtml = '';
+            this.refreshPreview({ forceFull: true });
             this.scheduleAutosave();
         },
 
@@ -73,32 +84,166 @@ export function registerCoverLetterBuilder() {
             return data;
         },
 
-        schedulePreview() {
+        scheduleServerPreview() {
             clearTimeout(this.previewTimer);
-            this.previewTimer = setTimeout(() => this.refreshPreview(), 300);
+            this.previewTimer = setTimeout(() => {
+                this.refreshPreview();
+            }, this.serverPreviewDebounceMs);
         },
 
-        async refreshPreview() {
+        applyLocalPreview() {
+            if (! this.previewFrameReady) {
+                return;
+            }
+
+            const frame = this.$refs.preview;
+            const doc = frame?.contentDocument;
+
+            if (! doc) {
+                return;
+            }
+
+            if (this.localPreviewFrame) {
+                window.cancelAnimationFrame(this.localPreviewFrame);
+            }
+
+            const scroll = this.capturePreviewScroll();
+
+            this.localPreviewFrame = window.requestAnimationFrame(() => {
+                this.localPreviewFrame = null;
+
+                if (applyCoverLetterPreviewPatch(doc, this.fields)) {
+                    this.restorePreviewScroll(scroll);
+                }
+            });
+        },
+
+        capturePreviewScroll() {
+            const frame = this.$refs.preview;
+
+            return {
+                panel: this.$refs.previewPanel?.scrollTop ?? 0,
+                iframe: frame?.contentWindow?.scrollY ?? 0,
+            };
+        },
+
+        restorePreviewScroll(scroll) {
+            if (this.$refs.previewPanel) {
+                this.$refs.previewPanel.scrollTop = scroll.panel;
+            }
+
+            const frameWindow = this.$refs.preview?.contentWindow;
+
+            if (frameWindow) {
+                frameWindow.scrollTo(0, scroll.iframe);
+            }
+        },
+
+        updatePreviewFrame(html, scroll, { forceFull = false } = {}) {
+            const frame = this.$refs.preview;
+
+            if (! frame) {
+                return;
+            }
+
+            const afterWrite = () => {
+                window.requestAnimationFrame(() => {
+                    this.restorePreviewScroll(scroll);
+                    this.applyLocalPreview();
+                });
+            };
+
+            if (
+                ! forceFull
+                && this.previewFrameReady
+                && this.patchPreviewPage(html, frame)
+            ) {
+                afterWrite();
+
+                return;
+            }
+
+            if (this.previewFrameReady && frame.contentDocument?.documentElement) {
+                const doc = frame.contentDocument;
+                doc.open();
+                doc.write(html);
+                doc.close();
+                this.previewFrameReady = true;
+                afterWrite();
+
+                return;
+            }
+
+            frame.srcdoc = html;
+            this.previewFrameReady = true;
+            frame.onload = () => {
+                afterWrite();
+                frame.onload = null;
+            };
+        },
+
+        patchPreviewPage(html, frame) {
+            const doc = frame.contentDocument;
+
+            if (! doc) {
+                return false;
+            }
+
+            const parsed = new DOMParser().parseFromString(html, 'text/html');
+            const nextPage = parsed.querySelector('.cl-page');
+            const currentPage = doc.querySelector('.cl-page');
+
+            if (! nextPage || ! currentPage) {
+                return false;
+            }
+
+            currentPage.replaceWith(doc.importNode(nextPage, true));
+
+            return true;
+        },
+
+        async refreshPreview({ forceFull = false } = {}) {
             if (! this.urls.render) {
                 return;
             }
 
-            this.previewLoading = true;
+            const templateChanged = this.template !== this.previewTemplateKey;
+
+            if (templateChanged) {
+                forceFull = true;
+                this.previewTemplateKey = this.template;
+                this.lastPreviewHtml = '';
+            }
+
+            this.previewAbortController?.abort();
+            const controller = new AbortController();
+            this.previewAbortController = controller;
+            const requestId = ++this.previewRequestId;
+            const scroll = this.capturePreviewScroll();
 
             try {
                 const { data } = await axios.post(this.urls.render, this.renderPayload(), {
                     headers: { Accept: 'text/html' },
                     responseType: 'text',
+                    signal: controller.signal,
                 });
 
-                const frame = this.$refs.preview;
-                if (frame) {
-                    frame.srcdoc = data;
+                if (requestId !== this.previewRequestId) {
+                    return;
                 }
+
+                if (! forceFull && data === this.lastPreviewHtml) {
+                    return;
+                }
+
+                this.updatePreviewFrame(data, scroll, { forceFull });
+                this.lastPreviewHtml = data;
             } catch (error) {
+                if (controller.signal.aborted || error.code === 'ERR_CANCELED') {
+                    return;
+                }
+
                 // Preview failures are non-blocking.
-            } finally {
-                this.previewLoading = false;
             }
         },
 
@@ -196,7 +341,11 @@ export function registerCoverLetterBuilder() {
 
                 this.applyAiResult(log?.response?.cover_letter);
                 this.isDirty = true;
-                this.refreshPreview();
+                this.lastPreviewHtml = '';
+                this.$nextTick(() => {
+                    this.applyLocalPreview();
+                    this.refreshPreview({ forceFull: true });
+                });
                 this.scheduleAutosave();
             } catch (error) {
                 const validationErrors = error.response?.data?.errors ?? {};
@@ -267,6 +416,7 @@ export function registerCoverLetterBuilder() {
                 window.dispatchEvent(new CustomEvent('cover-letter-ai-applied', {
                     detail: { ...this.fields },
                 }));
+                this.applyLocalPreview();
             });
         },
 

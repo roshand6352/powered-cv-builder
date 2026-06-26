@@ -76,4 +76,25 @@ class PlanService extends BaseService
                 ->firstOrFail(),
         );
     }
+
+    /**
+     * Include the user's active plan in pricing grids when it is not a catalog plan (e.g. legacy Pro).
+     *
+     * @param  Collection<int, Plan>  $plans
+     * @return Collection<int, Plan>
+     */
+    public function withCurrentPlan(Collection $plans, ?Plan $currentPlan): Collection
+    {
+        if ($currentPlan === null || $plans->contains('id', $currentPlan->id)) {
+            return $plans;
+        }
+
+        return $plans
+            ->push($currentPlan)
+            ->sortBy([
+                ['price', 'asc'],
+                ['sort_order', 'asc'],
+            ])
+            ->values();
+    }
 }

@@ -1,4 +1,4 @@
-@props(['plans', 'currentPlan' => null, 'showAllPlansButton' => false])
+@props(['plans', 'currentPlan' => null, 'showAllPlansButton' => false, 'showCurrentPlanBadge' => false])
 
 <section class="pricing" id="pricing">
     <div class="container">
@@ -19,18 +19,30 @@
                     $cardStyle = $plan->cardStyleAttributes()['style'] ?? null;
                     $buttonStyle = $plan->buttonStyleAttributes()['style'] ?? 'width:100%;justify-content:center;padding:14px';
                     $isCurrentPlan = auth()->check() && $currentPlan && (int) $currentPlan->id === (int) $plan->id;
+                    if ($showCurrentPlanBadge && $isCurrentPlan && $cardStyle) {
+                        $cardStyle = 'position:relative;'.$cardStyle;
+                    } elseif ($showCurrentPlanBadge && $isCurrentPlan) {
+                        $cardStyle = 'position:relative';
+                    }
                 @endphp
 
                 <div @class(['price-card', 'pro' => $plan->is_featured]) @if ($cardStyle) style="{{ $cardStyle }}" @endif>
-                    @if ($badge)
+                    @if ($showCurrentPlanBadge && $isCurrentPlan)
+                        <div class="pro-badge" style="background: var(--navy, #172d40);">Current Plan</div>
+                    @elseif ($badge)
                         <div class="pro-badge" style="background: {{ $plan->badge_color ?: $plan->accent_color ?: 'var(--orange)' }}">
                             {{ $badge }}
                         </div>
                     @endif
 
                     <div class="price-tier">{{ $plan->displayTypeLabel() }}</div>
-                    @if ($isCurrentPlan)
-                        <div class="payment-note">Current active plan</div>
+                    @if ($showCurrentPlanBadge && $isCurrentPlan && auth()->check())
+                        @php
+                            $expiresAt = auth()->user()->plan_expiry;
+                        @endphp
+                        @if ($expiresAt && ! $plan->isLifetime() && ! $plan->isFree())
+                            <div class="payment-note">Expires on: {{ $expiresAt->format('d M Y') }}</div>
+                        @endif
                     @endif
 
                     <div class="price-amount">

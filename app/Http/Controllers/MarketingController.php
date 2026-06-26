@@ -51,12 +51,15 @@ class MarketingController extends Controller
     public function pricing(): View
     {
         $currentPlan = null;
+        $plans = $this->planService->websitePlans();
+
         if (auth()->check()) {
             $currentPlan = $this->subscriptionService->resolveActivePlan(auth()->user());
+            $plans = $this->planService->withCurrentPlan($plans, $currentPlan);
         }
 
         return view('web.landing.pricing', [
-            'plans' => $this->planService->websitePlans(),
+            'plans' => $plans,
             'currentPlan' => $currentPlan,
             'seo' => [
                 'title' => 'Pricing',

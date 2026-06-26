@@ -9,6 +9,7 @@ use App\Services\Cv\CvService;
 use App\Services\Dashboard\DashboardService;
 use App\Services\Pdf\PdfExportService;
 use App\Services\Subscription\PaymentService;
+use App\Services\Subscription\PlanService;
 use App\Services\Subscription\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,6 +22,7 @@ class DashboardController extends Controller
         protected CoverLetterService $coverLetterService,
         protected PdfExportService $pdfExportService,
         protected SubscriptionService $subscriptionService,
+        protected PlanService $planService,
         protected PaymentService $paymentService,
         protected AiUsageService $aiUsageService,
     ) {}
@@ -56,9 +58,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $currentPlan = $this->subscriptionService->resolveActivePlan($user);
+        $plans = $this->planService->withCurrentPlan(
+            $this->subscriptionService->availablePlans(),
+            $currentPlan,
+        );
 
         return view('web.dashboard.subscription.index', [
-            'plans' => $this->subscriptionService->availablePlans(),
+            'plans' => $plans,
             'currentPlan' => $currentPlan,
             'subscription' => $this->subscriptionService->snapshot($user),
             'usage' => $this->aiUsageService->snapshot($user),
