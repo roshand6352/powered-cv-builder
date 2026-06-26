@@ -168,6 +168,10 @@ class PdfIconSvgInliner
 
     protected static function extractIconColor(string $html): string
     {
+        if (preg_match('/--cl-secondary:\s*([^;"\'\s]+)/i', $html, $match)) {
+            return trim($match[1]);
+        }
+
         if (preg_match('/--cv-secondary:\s*([^;"\'\s]+)/i', $html, $match)) {
             return trim($match[1]);
         }

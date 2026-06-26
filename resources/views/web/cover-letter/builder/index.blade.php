@@ -46,7 +46,7 @@
                     class="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-navy transition hover:bg-cream disabled:opacity-60"
                 >
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12M12 16.5V3" />
                     </svg>
                     <span x-text="pdfStatus === 'loading' ? 'Preparing…' : 'Download PDF'"></span>
                 </button>
@@ -71,6 +71,9 @@
                         <span class="text-xs text-muted" x-text="`${aiUsage.remaining}/${aiUsage.limit} credits`"></span>
                     </div>
                     <p class="mt-1 text-xs text-muted">Uses your selected CV plus the company &amp; role below.</p>
+                    <p x-show="!hasAiAccess" class="mt-2 text-xs font-medium text-amber-700">
+                        Upgrade to a paid plan to use AI generation.
+                    </p>
 
                     <label class="mt-3 block text-xs font-semibold text-navy">Job description (optional)</label>
                     <textarea
@@ -90,7 +93,7 @@
                         <button
                             type="button"
                             @click="generateWithAi()"
-                            :disabled="aiLoading"
+                            :disabled="aiLoading || !hasAiAccess"
                             class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy/90 disabled:opacity-60"
                         >
                             <svg x-show="!aiLoading" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -103,7 +106,7 @@
                             <span x-text="aiLoading ? 'Writing…' : 'Generate'"></span>
                         </button>
                     </div>
-                    <p x-show="aiError" x-text="aiError" class="mt-2 text-xs text-red-600"></p>
+                    <p x-show="aiError" x-cloak x-text="aiError" class="mt-2 text-xs text-red-600" role="alert"></p>
                 </div>
 
                 {{-- CV source --}}
@@ -157,11 +160,20 @@
                         <label class="block text-xs font-medium text-navy">Company address</label>
                         <div
                             class="cv-rich-text-field mt-1"
+                            data-cover-letter-field="company_address"
                             x-data="richTextField({
                                 get: () => fields.company_address,
                                 set: (value) => { fields.company_address = value; },
                                 minHeight: '90px',
                             })"
+                            @cover-letter-ai-applied.window="
+                                $nextTick(() => {
+                                    const key = $el.dataset.coverLetterField;
+                                    if (key && typeof setEditorHtml === 'function') {
+                                        setEditorHtml($event.detail[key] ?? '');
+                                    }
+                                })
+                            "
                             @input="onInput()"
                         >
                             <div x-ref="editor" data-rich-text-mount></div>
@@ -184,11 +196,20 @@
                         <label class="block text-xs font-medium text-navy">Introduction</label>
                         <div
                             class="cv-rich-text-field mt-1"
+                            data-cover-letter-field="introduction"
                             x-data="richTextField({
                                 get: () => fields.introduction,
                                 set: (value) => { fields.introduction = value; },
                                 minHeight: '120px',
                             })"
+                            @cover-letter-ai-applied.window="
+                                $nextTick(() => {
+                                    const key = $el.dataset.coverLetterField;
+                                    if (key && typeof setEditorHtml === 'function') {
+                                        setEditorHtml($event.detail[key] ?? '');
+                                    }
+                                })
+                            "
                             @input="onInput()"
                         >
                             <div x-ref="editor" data-rich-text-mount></div>
@@ -198,11 +219,20 @@
                         <label class="block text-xs font-medium text-navy">Body</label>
                         <div
                             class="cv-rich-text-field mt-1"
+                            data-cover-letter-field="body"
                             x-data="richTextField({
                                 get: () => fields.body,
                                 set: (value) => { fields.body = value; },
                                 minHeight: '220px',
                             })"
+                            @cover-letter-ai-applied.window="
+                                $nextTick(() => {
+                                    const key = $el.dataset.coverLetterField;
+                                    if (key && typeof setEditorHtml === 'function') {
+                                        setEditorHtml($event.detail[key] ?? '');
+                                    }
+                                })
+                            "
                             @input="onInput()"
                         >
                             <div x-ref="editor" data-rich-text-mount></div>

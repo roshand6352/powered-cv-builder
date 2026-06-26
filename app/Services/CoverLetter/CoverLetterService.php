@@ -8,6 +8,7 @@ use App\Models\CvTemplate;
 use App\Models\User;
 use App\Services\Ai\AiUsageService;
 use App\Services\BaseService;
+use App\Services\Subscription\SubscriptionService;
 use App\Support\Html\CoverLetterRichTextCleaner;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -19,6 +20,7 @@ class CoverLetterService extends BaseService
         protected CoverLetterRenderer $renderer,
         protected CoverLetterTemplateRegistry $templateRegistry,
         protected AiUsageService $aiUsageService,
+        protected SubscriptionService $subscriptionService,
     ) {}
 
     /**
@@ -125,6 +127,7 @@ class CoverLetterService extends BaseService
     {
         $coverLetter->loadMissing(['cv', 'template', 'user.plan']);
         $cv = $coverLetter->cv;
+        $activePlan = $this->subscriptionService->resolveActivePlan($coverLetter->user);
 
         return [
             'coverLetter' => [
@@ -146,6 +149,7 @@ class CoverLetterService extends BaseService
                 'thumbnail' => $tpl['thumbnail'] ?? null,
             ])->values()->all(),
             'aiUsage' => $this->aiUsageService->snapshot($coverLetter->user),
+            'hasAiAccess' => ! $activePlan->isFree(),
             'urls' => [
                 'save' => route('cover-letters.update', $coverLetter),
                 'autosave' => route('cover-letters.autosave', $coverLetter),
