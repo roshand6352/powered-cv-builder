@@ -102,7 +102,10 @@
 
                                         <form method="POST" action="{{ route('pdf-exports.cover-letter.download', $coverLetter) }}">
                                             @csrf
-                                            <button type="submit" class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-navy hover:bg-cream">
+                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-navy hover:bg-cream">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12M12 16.5V3" />
+                                                </svg>
                                                 Download PDF
                                             </button>
                                         </form>

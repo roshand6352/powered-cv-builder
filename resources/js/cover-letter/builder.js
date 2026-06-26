@@ -21,6 +21,7 @@ export function registerCoverLetterBuilder() {
         cv: payload.cv ?? null,
         templates: payload.templates ?? [],
         aiUsage: payload.aiUsage ?? { used: 0, limit: 0, remaining: 0 },
+        hasAiAccess: payload.hasAiAccess ?? true,
 
         title: payload.coverLetter?.title ?? '',
         template: payload.template?.slug ?? '',
@@ -154,7 +155,12 @@ export function registerCoverLetterBuilder() {
                 return;
             }
 
-            if (! this.fields.company_name || ! this.fields.job_title) {
+            if (! this.hasAiAccess) {
+                this.aiError = 'AI generation is available on paid plans only.';
+                return;
+            }
+
+            if (! this.fields.company_name?.trim() || ! this.fields.job_title?.trim()) {
                 this.aiError = 'Add a company name and job title first.';
                 return;
             }
@@ -174,7 +180,15 @@ export function registerCoverLetterBuilder() {
                     this.aiUsage = data.usage;
                 }
 
-                const log = await this.pollAiLog(data.log.id);
+                let log = data.log;
+
+                if (! log?.id) {
+                    throw new Error(data.message ?? 'AI generation failed.');
+                }
+
+                if (log.status !== 'completed' && log.status !== 'failed') {
+                    log = await this.pollAiLog(log.id);
+                }
 
                 if (log?.status === 'failed') {
                     throw new Error(log.error_message ?? 'AI generation failed.');
@@ -185,7 +199,16 @@ export function registerCoverLetterBuilder() {
                 this.refreshPreview();
                 this.scheduleAutosave();
             } catch (error) {
-                this.aiError = error.response?.data?.message ?? error.message ?? 'AI generation failed.';
+                const validationErrors = error.response?.data?.errors ?? {};
+                const firstValidationMessage = Object.values(validationErrors)
+                    .flat()
+                    .find((message) => typeof message === 'string');
+
+                this.aiError = firstValidationMessage
+                    ?? error.response?.data?.message
+                    ?? error.message
+                    ?? 'AI generation failed.';
+
                 if (error.response?.data?.usage) {
                     this.aiUsage = error.response.data.usage;
                 }
@@ -238,6 +261,12 @@ export function registerCoverLetterBuilder() {
                 this.fields[target] = richTextTargets.has(target)
                     ? prepareEditorHtml(value)
                     : value;
+            });
+
+            this.$nextTick(() => {
+                window.dispatchEvent(new CustomEvent('cover-letter-ai-applied', {
+                    detail: { ...this.fields },
+                }));
             });
         },
 

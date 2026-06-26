@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CoverLetter;
 
+use App\Enums\AiLogStatus;
 use App\Exceptions\Ai\AiGenerationException;
 use App\Exceptions\Ai\AiLimitExceededException;
 use App\Http\Controllers\Controller;
@@ -51,11 +52,20 @@ class CoverLetterAiController extends Controller
         try {
             $log = $this->aiService->generateCoverLetter($request->user(), $payload);
 
+            // Cover letter builder expects an immediate result — process queued jobs inline.
+            if ($log->status === AiLogStatus::Pending) {
+                $log = $this->aiService->process($log->fresh());
+            }
+
+            $statusCode = $log->status === AiLogStatus::Completed ? 200 : 202;
+
             return response()->json([
-                'message' => 'AI request queued.',
-                'log' => $this->aiService->logPayload($log),
+                'message' => $log->status === AiLogStatus::Completed
+                    ? 'Cover letter generated.'
+                    : 'AI request queued.',
+                'log' => $this->aiService->logPayload($log->fresh()),
                 'usage' => $this->usageService->snapshot($request->user()),
-            ], 202);
+            ], $statusCode);
         } catch (AiLimitExceededException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
