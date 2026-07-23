@@ -1,7 +1,7 @@
 # PROJECT FULL DOCUMENTATION
 
-**Project:** AI Powered CV Builder (Fresh)  
-**Package name:** `acme/ai-powered-cv-builder-fresh`  
+**Project:** ApplyDocs ZA
+**Package name:** `applydocs/applydocs-za`
 **Document generated:** 2026-05-21  
 **Scope:** Complete technical reference for the Laravel SaaS CV builder platform.
 
@@ -38,7 +38,7 @@
 
 ### Project Name
 
-**AI Powered CV Builder**
+**ApplyDocs ZA**
 
 ### Purpose
 
@@ -183,7 +183,7 @@ PayFast subscription checkout — see [Section 14](#14-payment-flow).
 | Setting | Value | Config key / file |
 |---------|-------|-------------------|
 | **Database engine** | MySQL | `DB_CONNECTION=mysql` |
-| **Database name** | `ai_powered_cv_builder_fresh` | `DB_DATABASE` |
+| **Database name** | `applydocs_za` | `DB_DATABASE` |
 | **Queue driver** | Database | `QUEUE_CONNECTION=database` |
 | **Cache driver** | Database | `CACHE_STORE=database` |
 | **Session driver** | Database | `SESSION_DRIVER=database` |
@@ -1317,7 +1317,7 @@ Hourly: php artisan subscriptions:expire
 ## 16. FILE STRUCTURE
 
 ```
-ai-powered-cv-builder-fresh/
+applydocs-za/
 ├── app/
 │   ├── Console/Commands/          # Artisan commands (subscriptions:expire)
 │   ├── Contracts/                   # Interfaces (CvRepository, OpenAiClient)
@@ -1487,7 +1487,7 @@ Spatie Activity Log records changes to User name/email (admin audit trail via `a
 
 ```bash
 # Clone / upload project
-cd ai-powered-cv-builder-fresh
+cd applydocs-za
 
 # Install PHP dependencies
 composer install --optimize-autoloader --no-dev

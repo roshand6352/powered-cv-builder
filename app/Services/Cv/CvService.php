@@ -33,6 +33,11 @@ class CvService extends BaseService
         );
     }
 
+    public function delete(Cv $cv): bool
+    {
+        return $this->cvRepository->delete($cv);
+    }
+
     public function assignTemplate(Cv $cv, CvTemplate $template): Cv
     {
         $document = CvDocumentData::fromArray($cv->cv_data ?? []);

@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "acme/ai-powered-cv-builder-fresh",
+    "name": "applydocs/applydocs-za",
     "type": "project",
     "description": "ApplyDocs ZA — CV builder SaaS platform.",
     "keywords": [

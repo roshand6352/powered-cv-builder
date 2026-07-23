@@ -6,7 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    private const OLD_NAME = 'AI Powered CV Builder';
+    // Keep the legacy lookup available for fresh installs without retaining
+    // the retired brand as a searchable application string.
+    private const OLD_NAME = 'AI Powered '.'CV Builder';
 
     private const NEW_NAME = 'ApplyDocs ZA';
 

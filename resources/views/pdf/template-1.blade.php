@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $full_name }} — CV</title>
+    <title>{{ $full_name }} — CV | {{ config('app.name') }}</title>
     <style>
         @page { size: A4 portrait; margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }

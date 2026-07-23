@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Alpine from 'alpinejs';
 import { prepareEditorHtml } from '../shared/rich-text-sanitize';
+import { openAiUpgradeModal } from '../shared/ai-upgrade';
 import { applyCoverLetterPreviewPatch } from './preview-patcher';
 
 const CONTENT_FIELDS = [
@@ -295,13 +296,32 @@ export function registerCoverLetterBuilder() {
             return (this.urls.aiLog ?? '').replace('__ID__', logId);
         },
 
+        guardAiAccess() {
+            if (this.hasAiAccess) {
+                return true;
+            }
+
+            this.promptAiUpgrade();
+
+            return false;
+        },
+
+        promptAiUpgrade() {
+            this.aiError = 'AI writing assistance is available on Pro plans. Upgrade to unlock Generate.';
+
+            openAiUpgradeModal({
+                message: 'AI writing assistance is available on Pro plans. Upgrade to unlock Generate.',
+                url: this.urls.subscription ?? '/dashboard/subscription',
+            });
+        },
+
         async generateWithAi() {
             if (this.aiLoading || ! this.urls.ai) {
                 return;
             }
 
-            if (! this.hasAiAccess) {
-                this.aiError = 'AI generation is available on paid plans only.';
+            // Match CV Builder Improve: show upgrade prompt and skip the API for free plans.
+            if (! this.guardAiAccess()) {
                 return;
             }
 
@@ -353,10 +373,15 @@ export function registerCoverLetterBuilder() {
                     .flat()
                     .find((message) => typeof message === 'string');
 
-                this.aiError = firstValidationMessage
-                    ?? error.response?.data?.message
-                    ?? error.message
-                    ?? 'AI generation failed.';
+                if (error.response?.status === 403) {
+                    this.hasAiAccess = false;
+                    this.promptAiUpgrade();
+                } else {
+                    this.aiError = firstValidationMessage
+                        ?? error.response?.data?.message
+                        ?? error.message
+                        ?? 'AI generation failed.';
+                }
 
                 if (error.response?.data?.usage) {
                     this.aiUsage = error.response.data.usage;

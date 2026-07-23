@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $preview['personal_details']['full_name'] ?? 'CV Preview' }}</title>
+    <title>{{ $preview['personal_details']['full_name'] ?? 'CV Preview' }} | {{ config('app.name') }}</title>
     @include('web.partials.favicon')
 
     @include('web.partials.fontawesome')

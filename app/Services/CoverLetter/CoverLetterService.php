@@ -160,6 +160,7 @@ class CoverLetterService extends BaseService
                 'pdfDownload' => route('pdf-exports.cover-letter.download', $coverLetter),
                 'list' => route('dashboard.cover-letters'),
                 'changeTemplate' => $cv ? route('cvs.cover-letters.create', $cv) : null,
+                'subscription' => route('dashboard.subscription'),
             ],
         ];
     }
