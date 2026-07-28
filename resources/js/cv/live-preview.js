@@ -15,6 +15,7 @@ export function registerCvLivePreview() {
         urls: config.urls ?? {},
         previewRenderer: new ClientPreviewRenderer(),
         previewFrameReady: false,
+        lastPreviewHtml: '',
         pdfExportStatus: 'idle',
         pdfExportError: null,
         syncStatus: 'waiting',
@@ -22,11 +23,17 @@ export function registerCvLivePreview() {
         channel: null,
         pollTimer: null,
         pollIntervalMs: config.poll_interval_ms ?? 5000,
+        isUserScrolling: false,
+        scrollIdleTimer: null,
+        pendingPreviewHtml: null,
 
         init() {
             applyTemplateMeta(this.document, this.activeTemplate, this.templateCatalog);
             this.activeTemplate = this.document.template?.slug ?? this.document.template?.key ?? this.activeTemplate;
             this.channel = openPreviewChannel(this.id, (data) => this.handleSyncMessage(data));
+
+            // Track page-level scrolling so preview updates never land mid-scroll.
+            window.addEventListener('scroll', () => this.markScrolling(), { passive: true });
 
             this.$nextTick(() => {
                 this.refreshPreview();
@@ -39,7 +46,36 @@ export function registerCvLivePreview() {
 
         destroy() {
             clearInterval(this.pollTimer);
+            clearTimeout(this.scrollIdleTimer);
             this.channel?.close();
+        },
+
+        markScrolling() {
+            this.isUserScrolling = true;
+            clearTimeout(this.scrollIdleTimer);
+
+            this.scrollIdleTimer = setTimeout(() => {
+                this.isUserScrolling = false;
+
+                // Apply the update that was deferred while scrolling.
+                if (this.pendingPreviewHtml !== null) {
+                    const html = this.pendingPreviewHtml;
+                    this.pendingPreviewHtml = null;
+                    this.updatePreviewFrame(html);
+                }
+            }, 250);
+        },
+
+        attachFrameScrollListener() {
+            try {
+                this.$refs.previewFrame?.contentWindow?.addEventListener(
+                    'scroll',
+                    () => this.markScrolling(),
+                    { passive: true },
+                );
+            } catch {
+                // Frame not accessible yet — listener reattached on next write.
+            }
         },
 
         handleSyncMessage(data) {
@@ -63,6 +99,14 @@ export function registerCvLivePreview() {
 
             this.syncStatus = 'live';
             this.lastUpdateAt = data.updatedAt ?? Date.now();
+
+            // Editor is pushing realtime updates — the polling fallback is no
+            // longer needed and would only cause extra re-renders.
+            if (this.pollTimer) {
+                clearInterval(this.pollTimer);
+                this.pollTimer = null;
+            }
+
             this.refreshPreview();
         },
 
@@ -71,8 +115,20 @@ export function registerCvLivePreview() {
                 return;
             }
 
+            // Standalone tab (no opener): nothing is editing this CV from a
+            // parent window, so skip auto-refresh polling entirely. Realtime
+            // updates still arrive via BroadcastChannel if a builder tab opens.
+            if (window.opener === null) {
+                return;
+            }
+
             this.pollTimer = window.setInterval(() => {
                 if (this.syncStatus === 'live') {
+                    return;
+                }
+
+                // Don't refresh a hidden tab or interrupt active scrolling.
+                if (document.hidden || this.isUserScrolling) {
                     return;
                 }
 
@@ -122,8 +178,51 @@ export function registerCvLivePreview() {
                 return;
             }
 
-            frame.srcdoc = html;
-            this.previewFrameReady = true;
+            // Identical content — skip the update entirely so polling never
+            // reloads the iframe (and resets scroll) while the user reads.
+            if (html === this.lastPreviewHtml) {
+                return;
+            }
+
+            // User is mid-scroll: defer the update until scrolling settles so
+            // the page never jumps under their finger. Only the latest HTML
+            // is kept — intermediate states are dropped.
+            if (this.isUserScrolling && this.previewFrameReady) {
+                this.pendingPreviewHtml = html;
+
+                return;
+            }
+
+            this.lastPreviewHtml = html;
+            this.pendingPreviewHtml = null;
+
+            // First render: plain srcdoc load.
+            if (! this.previewFrameReady || ! frame.contentDocument?.documentElement) {
+                frame.srcdoc = html;
+                this.previewFrameReady = true;
+
+                frame.addEventListener('load', () => this.attachFrameScrollListener(), { once: true });
+
+                return;
+            }
+
+            // Subsequent renders: rewrite the document in place instead of
+            // reassigning srcdoc (which reloads the iframe), and keep the
+            // reader's scroll position stable.
+            const frameWindow = frame.contentWindow;
+            const scrollX = frameWindow?.scrollX ?? 0;
+            const scrollY = frameWindow?.scrollY ?? 0;
+
+            const doc = frame.contentDocument;
+            doc.open();
+            doc.write(html);
+            doc.close();
+
+            this.attachFrameScrollListener();
+
+            window.requestAnimationFrame(() => {
+                frame.contentWindow?.scrollTo(scrollX, scrollY);
+            });
         },
 
         syncStatusLabel() {

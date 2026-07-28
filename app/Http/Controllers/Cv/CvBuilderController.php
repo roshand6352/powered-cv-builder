@@ -43,7 +43,7 @@ class CvBuilderController extends Controller
         );
 
         return response()->json([
-            'message' => $publish ? 'CV published successfully.' : 'CV saved as draft.',
+            'message' => $publish ? 'CV saved successfully.' : 'CV saved as draft.',
             'cv' => $this->cvResponsePayload($cv),
         ]);
     }

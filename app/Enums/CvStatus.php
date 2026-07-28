@@ -11,7 +11,7 @@ enum CvStatus: int
     {
         return match ($this) {
             self::Draft => 'Draft',
-            self::Published => 'Published',
+            self::Published => 'Saved',
         };
     }
 

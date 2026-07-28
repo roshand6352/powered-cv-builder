@@ -20,6 +20,7 @@ import { broadcastPreviewState, openPreviewChannel } from './preview-sync';
 import { applyPreviewPatches } from './preview-patcher';
 import { dedupeWithinMs, perfLog, scheduleFrame } from './builder-perf';
 import { prepareEditorHtml, richTextToPlainText } from '../shared/rich-text-sanitize';
+import { openAiUpgradeModal } from '../shared/ai-upgrade';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -429,9 +430,10 @@ export function registerCvBuilder() {
                 'AI writing assistance is available on Pro plans. Upgrade to unlock Improve.',
             );
 
-            if (window.confirm('AI features require a Pro plan. View upgrade options now?')) {
-                window.location.href = this.urls.subscription ?? '/dashboard/subscription';
-            }
+            openAiUpgradeModal({
+                message: 'AI writing assistance is available on Pro plans. Upgrade to unlock Improve.',
+                url: this.urls.subscription ?? '/dashboard/subscription',
+            });
         },
 
         async runAiRequest(url, payload, { queued = false, apply = null, fieldKey = null } = {}) {
@@ -1229,9 +1231,16 @@ export function registerCvBuilder() {
                 pending: 'Unsaved changes',
                 saving: 'Saving draft...',
                 saved: 'Draft saved',
-                published: 'Published',
+                published: 'Saved',
                 error: 'Save failed',
             }[this.saveStatus] ?? '';
+        },
+
+        cvStatusLabel() {
+            return {
+                draft: 'Draft',
+                published: 'Saved',
+            }[this.status] ?? this.status;
         },
 
         orderedSections() {

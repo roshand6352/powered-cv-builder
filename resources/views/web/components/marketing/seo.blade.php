@@ -10,7 +10,7 @@
 @php
     $siteName = config('app.name');
     $pageTitle = $title ? "{$title} | {$siteName}" : $siteName;
-    $pageDescription = $description ?? 'Build professional, ATS-optimized CVs with AI-powered writing assistance and beautiful templates.';
+    $pageDescription = $description ?? 'Build professional, ATS-optimized CVs with ApplyDocs ZA using AI-powered writing assistance and beautiful templates.';
     $canonicalUrl = $canonical ?? url()->current();
     $ogImageUrl = $ogImage ?? asset('images/og-default.jpg');
 @endphp

@@ -64,7 +64,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $data['subject'] ?: 'Cover Letter' }}</title>
+    <title>{{ $data['subject'] ?: 'Cover Letter' }} | {{ config('app.name') }}</title>
     @include('web.partials.fontawesome')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

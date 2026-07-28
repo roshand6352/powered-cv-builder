@@ -35,6 +35,7 @@ Route::get('/cv/download/template-3', [CvPdfController::class, 'downloadTemplate
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/templates/{cvTemplate:slug}/use', CreateCvFromTemplateController::class)->name('templates.use');
     Route::post('/cvs', [CvDraftController::class, 'store'])->name('cvs.store');
+    Route::delete('/cvs/{cv}', [CvDraftController::class, 'destroy'])->name('cvs.destroy');
     Route::get('/cv/{cv}/preview', [CvPreviewController::class, 'show'])->name('cv.preview');
     Route::get('/cvs/{cv}/templates', [CvTemplateSelectionController::class, 'index'])->name('cvs.templates');
     Route::post('/cvs/{cv}/templates', [CvTemplateSelectionController::class, 'store'])->name('cvs.templates.store');

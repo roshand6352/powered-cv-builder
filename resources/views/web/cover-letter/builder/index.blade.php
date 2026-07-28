@@ -16,7 +16,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-cream font-sans antialiased text-body" style="font-family:'DM Sans',sans-serif">
+<body class="cover-letter-builder-page bg-cream font-sans antialiased text-body" style="font-family:'DM Sans',sans-serif">
     <div x-data="coverLetterBuilder(@js($builder))" class="flex h-screen flex-col">
         {{-- Toolbar --}}
         <header class="flex shrink-0 items-center justify-between gap-4 border-b border-line bg-white px-4 py-3 sm:px-6">
@@ -71,9 +71,6 @@
                         <span class="text-xs text-muted" x-text="`${aiUsage.remaining}/${aiUsage.limit} credits`"></span>
                     </div>
                     <p class="mt-1 text-xs text-muted">Uses your selected CV plus the company &amp; role below.</p>
-                    <p x-show="!hasAiAccess" class="mt-2 text-xs font-medium text-amber-700">
-                        Upgrade to a paid plan to use AI generation.
-                    </p>
 
                     <label class="mt-3 block text-xs font-semibold text-navy">Job description (optional)</label>
                     <textarea
@@ -93,8 +90,8 @@
                         <button
                             type="button"
                             @click="generateWithAi()"
-                            :disabled="aiLoading || !hasAiAccess"
-                            class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy/90 disabled:opacity-60"
+                            :disabled="aiLoading"
+                            class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <svg x-show="!aiLoading" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -263,5 +260,7 @@
             </section>
         </div>
     </div>
+
+    <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />
 </body>
 </html>

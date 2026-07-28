@@ -24,6 +24,12 @@ class EnsurePremiumPlan
         $activePlan = $this->subscriptionService->resolveActivePlan($user);
 
         if ($activePlan->isFree()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'AI writing assistance is available on Pro plans. Upgrade to unlock this feature.',
+                ], 403);
+            }
+
             return redirect()
                 ->route('dashboard.subscription')
                 ->with('error', 'This feature is available on paid plans only.');

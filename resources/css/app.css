@@ -196,3 +196,41 @@
         @apply mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800;
     }
 }
+
+/*
+ * Mobile auto-zoom fix (iOS Safari / Android Chrome).
+ *
+ * Browsers zoom the page when a focused field's font-size is below 16px.
+ * Enforce a 16px minimum on editable builder fields at mobile/tablet widths
+ * only — desktop keeps the existing sizes. Scoped to CV / Cover Letter
+ * builder pages so nothing else changes. Live preview iframes are untouched
+ * (template font sizes from Admin → Template Module keep working as configured).
+ */
+@media (max-width: 1023px) {
+    .cv-builder-page input[type='text'],
+    .cv-builder-page input[type='email'],
+    .cv-builder-page input[type='number'],
+    .cv-builder-page input[type='tel'],
+    .cv-builder-page input[type='url'],
+    .cv-builder-page input[type='search'],
+    .cv-builder-page input[type='password'],
+    .cv-builder-page input:not([type]),
+    .cv-builder-page textarea,
+    .cv-builder-page select,
+    .cv-builder-page .cv-rich-text-field .ql-container.ql-snow,
+    .cv-builder-page .cv-rich-text-field .ql-editor,
+    .cover-letter-builder-page input[type='text'],
+    .cover-letter-builder-page input[type='email'],
+    .cover-letter-builder-page input[type='number'],
+    .cover-letter-builder-page input[type='tel'],
+    .cover-letter-builder-page input[type='url'],
+    .cover-letter-builder-page input[type='search'],
+    .cover-letter-builder-page input[type='password'],
+    .cover-letter-builder-page input:not([type]),
+    .cover-letter-builder-page textarea,
+    .cover-letter-builder-page select,
+    .cover-letter-builder-page .cv-rich-text-field .ql-container.ql-snow,
+    .cover-letter-builder-page .cv-rich-text-field .ql-editor {
+        font-size: 16px !important;
+    }
+}

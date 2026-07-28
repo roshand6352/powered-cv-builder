@@ -44,6 +44,11 @@ class CvRepository implements CvRepositoryInterface
 
     public function delete(Cv $cv): bool
     {
+        // Soft-delete related sections so they do not linger as active orphans.
+        // Cover letters keep their cv_id (FK still valid under soft delete) and
+        // simply lose the linked CV in listings via SoftDeletes global scope.
+        $cv->sections()->each(fn ($section) => $section->delete());
+
         return (bool) $cv->delete();
     }
 }

@@ -46,7 +46,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full overflow-hidden bg-cream font-sans antialiased text-body" style="font-family:'DM Sans',sans-serif">
+<body class="cv-builder-page h-full overflow-hidden bg-cream font-sans antialiased text-body" style="font-family:'DM Sans',sans-serif">
     <div
         x-data="cvBuilder(@js($builderPayload))"
         class="flex h-full flex-col overflow-hidden"
@@ -79,5 +79,7 @@
             </div>
         </div>
     </div>
+
+    <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />
 </body>
 </html>
