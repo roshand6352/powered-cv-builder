@@ -539,15 +539,131 @@ class PdfHtmlPreparer extends BaseService
 
     {
 
-        return preg_replace(
+        foreach (['pdf-watermark', 'cv-watermark', 'cl-watermark'] as $class) {
 
-            '/<div class="cv-watermark"[^>]*>.*?<\/div>\s*/s',
+            $html = $this->stripSingleLevelDivByClass($html, $class);
 
-            '',
+        }
 
-            $html,
 
-        ) ?? $html;
+
+        return $html;
+
+    }
+
+
+
+    /**
+
+     * Remove flat watermark divs without regex (data-URI src can exceed PCRE backtrack limits).
+
+     */
+
+    protected function stripSingleLevelDivByClass(string $html, string $class): string
+
+    {
+
+        $offset = 0;
+
+
+
+        while (true) {
+
+            $openPos = null;
+
+            $openLen = 0;
+
+
+
+            foreach ([
+
+                '<div class="'.$class.'"',
+
+                "<div class='{$class}'",
+
+                '<div class="'.$class.' ',
+
+                "<div class='{$class} ",
+
+            ] as $needle) {
+
+                $pos = stripos($html, $needle, $offset);
+
+
+
+                if ($pos === false) {
+
+                    continue;
+
+                }
+
+
+
+                if ($openPos === null || $pos < $openPos) {
+
+                    $openPos = $pos;
+
+                    $gt = strpos($html, '>', $pos);
+
+
+
+                    if ($gt === false) {
+
+                        return $html;
+
+                    }
+
+
+
+                    $openLen = ($gt - $pos) + 1;
+
+                }
+
+            }
+
+
+
+            if ($openPos === null) {
+
+                break;
+
+            }
+
+
+
+            $closePos = stripos($html, '</div>', $openPos + $openLen);
+
+
+
+            if ($closePos === false) {
+
+                break;
+
+            }
+
+
+
+            $end = $closePos + 6;
+
+
+
+            while ($end < strlen($html) && ctype_space($html[$end])) {
+
+                $end++;
+
+            }
+
+
+
+            $html = substr($html, 0, $openPos).substr($html, $end);
+
+            $offset = $openPos;
+
+        }
+
+
+
+        return $html;
 
     }
 
@@ -587,13 +703,37 @@ class PdfHtmlPreparer extends BaseService
 
         return preg_replace_callback(
 
-            '/(<img[^>]*class="cv-watermark-logo"[^>]*\ssrc=)(["\'])[^"\']*(["\'])/i',
+            '/<img\b[^>]*\bclass=(["\'])[^"\']*\bcv-watermark-logo\b[^"\']*\1[^>]*>/i',
 
-            static fn (array $matches): string => $matches[1].$matches[2].$dataUri.$matches[3],
+            static function (array $matches) use ($dataUri): string {
+
+                $tag = $matches[0];
+
+
+
+                if (preg_match('/\ssrc=(["\'])[^"\']*\1/i', $tag) === 1) {
+
+                    return preg_replace(
+
+                        '/\ssrc=(["\'])[^"\']*\1/i',
+
+                        ' src=$1'.$dataUri.'$1',
+
+                        $tag,
+
+                        1,
+
+                    ) ?? $tag;
+
+                }
+
+
+
+                return preg_replace('/<img\b/i', '<img src="'.$dataUri.'"', $tag, 1) ?? $tag;
+
+            },
 
             $html,
-
-            1,
 
         ) ?? $html;
 

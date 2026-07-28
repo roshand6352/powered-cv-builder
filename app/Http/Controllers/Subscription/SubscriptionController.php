@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Subscription\SubscriptionPayRequest;
 use App\Models\Plan;
 use App\Models\Payment;
+use App\Services\Subscription\CouponService;
 use App\Services\Subscription\PayFastService;
 use App\Services\Subscription\PaymentService;
 use App\Services\Subscription\PlanService;
@@ -21,6 +22,7 @@ class SubscriptionController extends Controller
         protected PlanService $planService,
         protected PaymentService $paymentService,
         protected PayFastService $payFastService,
+        protected CouponService $couponService,
     ) {}
 
     public function checkout(Request $request, Plan $plan): RedirectResponse|View
@@ -31,12 +33,26 @@ class SubscriptionController extends Controller
 
         $user = $request->user();
         $currentPlan = $this->subscriptionService->resolveActivePlan($user);
+        $appliedCoupon = null;
+        $recalled = $this->couponService->recalledApplied($plan);
+
+        if ($recalled && ! empty($recalled['code'])) {
+            $validated = $this->couponService->validateForCheckout((string) $recalled['code'], $user, $plan);
+            $appliedCoupon = ($validated['valid'] ?? false) ? $validated : null;
+
+            if (! $appliedCoupon) {
+                $this->couponService->forgetApplied($plan);
+            }
+        }
 
         return view('web.subscription.checkout', [
             'plan' => $plan,
             'user' => $user,
             'currentPlan' => $currentPlan,
             'action' => $this->subscriptionService->comparePlans($currentPlan, $plan),
+            'appliedCoupon' => $appliedCoupon,
+            'couponValidateUrl' => route('coupon.validate'),
+            'couponRemoveUrl' => route('coupon.remove'),
         ]);
     }
 
@@ -47,7 +63,32 @@ class SubscriptionController extends Controller
         }
 
         $user = $request->user();
-        $payment = $this->paymentService->createPending($user, $plan);
+        $couponContext = null;
+        $couponCode = trim((string) $request->input('coupon_code', ''));
+
+        if ($couponCode !== '') {
+            $couponContext = $this->couponService->resolveForPayment($couponCode, $user, $plan);
+        }
+
+        $payment = $this->paymentService->createPending($user, $plan, $couponContext);
+        $this->couponService->forgetApplied($plan);
+
+        if ((float) $payment->amount <= 0) {
+            $payment = $this->paymentService->markCompleted($payment, [
+                'source' => 'zero_amount_coupon',
+                'payment_status' => 'COMPLETE',
+            ]);
+            $payment->loadMissing(['user', 'plan']);
+
+            if ($payment->plan) {
+                $this->subscriptionService->activatePlan($payment->user, $payment->plan, $payment);
+            }
+
+            return redirect()
+                ->route('dashboard.subscription')
+                ->with('success', 'Coupon applied. Your subscription is active.');
+        }
+
         $formData = $this->payFastService->buildPaymentForm($payment, $user, $plan);
 
         return view('web.subscription.payfast-redirect', [

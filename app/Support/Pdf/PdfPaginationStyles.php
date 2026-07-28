@@ -69,7 +69,7 @@ body.cv-pdf-export .cv-section-title {
     display: block !important;
 }
 
-body.cv-pdf-export img {
+body.cv-pdf-export img:not(.cv-watermark-logo):not(.pdf-watermark__img) {
     max-width: 100% !important;
     height: auto !important;
 }

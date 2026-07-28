@@ -4,6 +4,8 @@ namespace App\Services\Subscription;
 
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentStatus;
+use App\Models\Coupon;
+use App\Models\CouponRedemption;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\User;
@@ -13,9 +15,32 @@ use Illuminate\Support\Str;
 
 class PaymentService extends BaseService
 {
-    public function createPending(User $user, Plan $plan): Payment
+    public function createPending(User $user, Plan $plan, ?array $couponContext = null): Payment
     {
         $reference = 'PF-'.Str::upper(Str::random(12));
+        $amount = round((float) $plan->price, 2);
+        $payload = [
+            'plan_slug' => $plan->slug,
+            'plan_name' => $plan->name,
+        ];
+
+        if (is_array($couponContext) && isset($couponContext['coupon'], $couponContext['pricing'])) {
+            /** @var \App\Models\Coupon $coupon */
+            $coupon = $couponContext['coupon'];
+            $pricing = $couponContext['pricing'];
+            $amount = round((float) $pricing['total'], 2);
+            $payload['coupon'] = [
+                'id' => $coupon->id,
+                'code' => $coupon->code,
+                'type' => $coupon->discount_type->value,
+                'discount_type' => $coupon->discount_type->value,
+                'value' => (float) $coupon->discount_value,
+                'discount_value' => (float) $coupon->discount_value,
+                'plan_price' => $pricing['plan_price'],
+                'discount_amount' => $pricing['discount_amount'],
+                'total' => $pricing['total'],
+            ];
+        }
 
         return Payment::query()->create([
             'user_id' => $user->id,
@@ -23,12 +48,9 @@ class PaymentService extends BaseService
             'gateway' => PaymentGateway::Payfast,
             'transaction_id' => $reference,
             'reference' => $reference,
-            'amount' => $plan->price,
+            'amount' => $amount,
             'status' => PaymentStatus::Pending,
-            'payload' => [
-                'plan_slug' => $plan->slug,
-                'plan_name' => $plan->name,
-            ],
+            'payload' => $payload,
         ]);
     }
 
@@ -44,7 +66,25 @@ class PaymentService extends BaseService
             'transaction_id' => $payload['pf_payment_id'] ?? $payment->transaction_id,
         ]);
 
-        return $payment->fresh(['plan', 'user']);
+        $payment = $payment->fresh(['plan', 'user']);
+
+        $couponPayload = $payment->payload['coupon'] ?? null;
+
+        if (is_array($couponPayload) && ! empty($couponPayload['id']) && $payment->user) {
+            $coupon = Coupon::query()->find($couponPayload['id']);
+
+            if ($coupon && ! CouponRedemption::query()
+                ->where('payment_id', $payment->id)
+                ->exists()) {
+                app(CouponService::class)->recordRedemption($coupon, $payment->user, $payment, [
+                    'plan_price' => (float) ($couponPayload['plan_price'] ?? $payment->amount),
+                    'discount_amount' => (float) ($couponPayload['discount_amount'] ?? 0),
+                    'total' => (float) ($couponPayload['total'] ?? $payment->amount),
+                ]);
+            }
+        }
+
+        return $payment;
     }
 
     public function markFailed(Payment $payment, array $payload = []): Payment

@@ -35,6 +35,7 @@ class CvTemplateRenderController extends Controller
             'mode' => $request->query('mode', 'preview'),
             'user' => $request->user(),
             'template_id' => $cv->template_id,
+            'watermark' => $this->templateRenderer->shouldWatermark($request->user()),
         ]);
 
         return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
@@ -53,6 +54,7 @@ class CvTemplateRenderController extends Controller
             'template_id' => $applied['document']->template->id
                 ?? $applied['definition']['id']
                 ?? $cv->template_id,
+            'watermark' => $this->templateRenderer->shouldWatermark($request->user()),
         ]);
 
         return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
@@ -80,6 +82,7 @@ class CvTemplateRenderController extends Controller
             'mode' => 'preview',
             'user' => $request->user(),
             'template_id' => $dbTemplate?->id ?? $cv->template_id,
+            'watermark' => $this->templateRenderer->shouldWatermark($request->user()),
         ]);
 
         return response()->json([

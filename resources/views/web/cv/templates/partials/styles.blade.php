@@ -170,13 +170,46 @@
     .cv-list-row strong { font-weight: 600; }
     .cv-group { margin-bottom: 1.25rem; }
     .cv-group-title { font-weight: 700; font-size: .92rem; margin: 0 0 .65rem; }
-    .cv-watermark { position: absolute; inset: 0; display: none; pointer-events: none; user-select: none; z-index: 9999; overflow: hidden; }
-    .cv-watermark-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.65rem; text-align: center; padding: 1rem; }
-    .cv-watermark-primary { font-size: 3.25rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(71,85,105,{{ config('cv-templates.watermark.text_opacity', 0.20) }}); line-height: 1; white-space: nowrap; }
-    .cv-watermark-secondary { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(71,85,105,{{ max(config('cv-templates.watermark.text_opacity', 0.20) - 0.03, 0.12) }}); line-height: 1.2; white-space: nowrap; }
+    .pdf-watermark,
+    .cv-watermark {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        user-select: none;
+        z-index: 2147483000;
+        overflow: visible;
+        background: transparent;
+    }
+    .pdf-watermark__img,
+    .cv-watermark-logo {
+        display: block;
+        width: {{ (int) config('cv-templates.watermark.logo_display_width_px', 900) }}px;
+        max-width: none;
+        height: auto;
+        opacity: {{ config('cv-templates.watermark.logo_opacity', 0.20) }};
+        transform: rotate({{ config('cv-templates.watermark.angle', -30) }}deg);
+        transform-origin: center center;
+        object-fit: contain;
+        image-rendering: auto;
+    }
+    .cv-body--preview .pdf-watermark,
+    .cv-body--embedded .pdf-watermark,
+    .cv-body--export .pdf-watermark,
+    .cv-body--pdf .pdf-watermark,
+    .cv-body--preview .cv-watermark,
+    .cv-body--embedded .cv-watermark,
     .cv-body--export .cv-watermark,
     .cv-body--pdf .cv-watermark {
-        display: none;
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 2147483000;
     }
 
     /* Layout variants — 10 premium ATS templates */

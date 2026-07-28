@@ -31,7 +31,7 @@ function insertIntoPage(page, element, anchorSelector) {
         }
     }
 
-    const watermark = page.querySelector('.cl-watermark');
+    const watermark = page.querySelector('.pdf-watermark, .cl-watermark');
 
     if (watermark) {
         page.insertBefore(element, watermark);

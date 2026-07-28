@@ -42,6 +42,7 @@ class DompdfHtmlNormalizer extends BaseService
      */
     protected function stripConflictingExportStyles(string $html): string
     {
+        // Keep pdf-watermark-styles — DomPDF still needs the logo layer CSS.
         return preg_replace(
             '/<style\b[^>]*id=["\']cv-pdf-export-styles["\'][^>]*>.*?<\/style>\s*/is',
             '',

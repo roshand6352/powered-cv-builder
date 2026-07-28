@@ -12,6 +12,10 @@
         :description="$seo['description'] ?? null"
         :keywords="$seo['keywords'] ?? null"
         :canonical="$seo['canonical'] ?? null"
+        :og-image="$seo['og_image'] ?? null"
+        :og-type="$seo['og_type'] ?? 'website'"
+        :robots="$seo['robots'] ?? 'index, follow'"
+        :article="$seo['article'] ?? null"
     />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

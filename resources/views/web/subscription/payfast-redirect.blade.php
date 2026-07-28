@@ -19,7 +19,8 @@
             <h1 class="text-lg font-semibold text-slate-900">Redirecting to PayFast</h1>
             <p class="mt-2 text-sm text-slate-500">
                 You are being redirected to complete payment for the
-                <strong>{{ $plan->name }}</strong> plan ({{ $plan->formattedPrice() }}).
+                <strong>{{ $plan->name }}</strong> plan
+                ({{ ($plan->currency_symbol ?: 'R').' '.number_format((float) ($formData['amount'] ?? $plan->price), 2, '.', ',') }}).
             </p>
         </div>
     </div>

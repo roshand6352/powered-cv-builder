@@ -2,13 +2,15 @@ import { ClientPreviewRenderer } from './preview-renderer';
 import { applyTemplateMeta } from './layout-resolver';
 import { openPreviewChannel } from './preview-sync';
 import { downloadCvPdf, resolveCvPdfDownloadError } from './pdf-download';
+import { normalizeDocumentDates } from './date-format';
+
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export function registerCvLivePreview() {
     window.Alpine.data('cvLivePreview', (config) => ({
         id: config.id,
         title: config.title,
-        document: clone(config.document),
+        document: normalizeDocumentDates(clone(config.document)),
         sections: config.sections,
         templateCatalog: config.template_catalog ?? [],
         activeTemplate: config.active_template ?? config.document?.template?.key ?? 'classic',
@@ -26,6 +28,8 @@ export function registerCvLivePreview() {
         isUserScrolling: false,
         scrollIdleTimer: null,
         pendingPreviewHtml: null,
+        showWatermark: config.show_watermark ?? false,
+        watermark: config.watermark ?? null,
 
         init() {
             applyTemplateMeta(this.document, this.activeTemplate, this.templateCatalog);
@@ -84,7 +88,7 @@ export function registerCvLivePreview() {
             }
 
             if (data.document) {
-                this.document = clone(data.document);
+                this.document = normalizeDocumentDates(clone(data.document));
             }
 
             if (data.title) {
@@ -166,6 +170,10 @@ export function registerCvLivePreview() {
                 this.sections,
                 this.activeTemplate,
                 this.templateCatalog,
+                {
+                    showWatermark: this.showWatermark,
+                    watermark: this.watermark,
+                },
             );
 
             this.updatePreviewFrame(result.html);
@@ -201,7 +209,10 @@ export function registerCvLivePreview() {
                 frame.srcdoc = html;
                 this.previewFrameReady = true;
 
-                frame.addEventListener('load', () => this.attachFrameScrollListener(), { once: true });
+                frame.addEventListener('load', () => {
+                    this.ensurePreviewWatermark(frame.contentDocument);
+                    this.attachFrameScrollListener();
+                }, { once: true });
 
                 return;
             }
@@ -218,11 +229,53 @@ export function registerCvLivePreview() {
             doc.write(html);
             doc.close();
 
+            this.ensurePreviewWatermark(doc);
             this.attachFrameScrollListener();
 
             window.requestAnimationFrame(() => {
                 frame.contentWindow?.scrollTo(scrollX, scrollY);
             });
+        },
+
+        ensurePreviewWatermark(doc = null) {
+            const documentRef = doc ?? this.$refs.previewFrame?.contentDocument;
+            const page = documentRef?.querySelector('.cv-page');
+
+            if (! page) {
+                return;
+            }
+
+            const existing = page.querySelector('.pdf-watermark');
+
+            if (! this.showWatermark || ! this.watermark?.logo_url) {
+                existing?.remove();
+
+                return;
+            }
+
+            if (existing) {
+                return;
+            }
+
+            const opacity = Number(this.watermark.opacity ?? 0.20);
+            const angle = Number(this.watermark.angle ?? -30);
+            const widthPx = Number(this.watermark.width_px ?? 900);
+            const wrap = documentRef.createElement('div');
+            wrap.className = 'pdf-watermark';
+            wrap.setAttribute('aria-hidden', 'true');
+            wrap.style.setProperty('--wm-opacity', String(opacity));
+            wrap.style.setProperty('--wm-angle', `${angle}deg`);
+            wrap.style.setProperty('--wm-width', `${widthPx}px`);
+
+            const img = documentRef.createElement('img');
+            img.className = 'pdf-watermark__img cv-watermark-logo';
+            img.src = this.watermark.logo_url;
+            img.width = 4500;
+            img.height = 827;
+            img.alt = '';
+
+            wrap.appendChild(img);
+            page.prepend(wrap);
         },
 
         syncStatusLabel() {

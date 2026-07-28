@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Ai\AiController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CoverLetter\CoverLetterAiController;
 use App\Http\Controllers\CoverLetter\CoverLetterBuilderController;
 use App\Http\Controllers\CoverLetter\CoverLetterController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Pdf\PdfExportController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Subscription\CouponController;
 use App\Http\Controllers\Subscription\PayFastController;
 use App\Http\Controllers\Subscription\SubscriptionController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,8 @@ Route::get('/contact', [MarketingController::class, 'contact'])->name('contact')
 Route::get('/about', [MarketingController::class, 'about'])->name('about');
 Route::get('/privacy-policy', [MarketingController::class, 'privacy'])->name('privacy');
 Route::get('/terms', [MarketingController::class, 'terms'])->name('terms');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/cv/download', [CvPdfController::class, 'download'])->name('cv.download');
 Route::get('/cv/download/template-1', [CvPdfController::class, 'downloadTemplate1'])->name('cv.download.template-1');
 Route::get('/cv/download/template-2', [CvPdfController::class, 'downloadTemplate2'])->name('cv.download.template-2');
@@ -90,6 +94,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/failed', [SubscriptionController::class, 'failed'])->name('failed');
         Route::get('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
     });
+
+    Route::post('/coupon/validate', [CouponController::class, 'check'])->name('coupon.validate');
+    Route::post('/coupon/remove', [CouponController::class, 'remove'])->name('coupon.remove');
 });
 
 Route::post('/payfast/itn', [PayFastController::class, 'itn'])->name('payfast.itn');
