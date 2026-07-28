@@ -44,10 +44,12 @@ return [
         'primary_text' => 'FREE VERSION',
         'secondary_text' => 'Generated with Free Plan',
         'text_opacity' => 0.20,
-        'logo_opacity' => 0.12,
-        'angle' => -35,
-        'use_logo' => false,
-        'logo' => 'images/LOGO-02.png',
+        'logo_opacity' => 0.20,
+        'angle' => -30,
+        // Large enough to read diagonally; kept under the rotated A4 fit limit to avoid cropping.
+        'logo_display_width_px' => 900,
+        'use_logo' => true,
+        'logo' => 'images/WATERMARK-LOGO.png',
         'plans_without_watermark' => ['pro', 'premium', 'business'],
     ],
 

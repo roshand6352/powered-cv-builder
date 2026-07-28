@@ -3,6 +3,7 @@
 import { normalizePhotoPosition, photoPositionClass } from './layout-resolver';
 import { renderRichTextHtml } from '../shared/rich-text-html';
 import { contactIconHtml, sectionIconHtml } from './section-icons';
+import { formatCvDate, formatCvDateRange } from './date-format';
 
 export function escapeHtml(value) {
     return String(value ?? '')
@@ -18,27 +19,15 @@ function trimJoin(parts, separator) {
 }
 
 function formatExperienceDates(item) {
-    const start = item.start_date ?? '';
-    const end = item.current ? 'Present' : (item.end_date ?? '');
-    const hasRange = start && (end || item.current);
-
-    return `${escapeHtml(start)}${hasRange ? ' – ' : ''}${escapeHtml(end)}`;
+    return escapeHtml(formatCvDateRange(item.start_date, item.end_date, { present: Boolean(item.current) }));
 }
 
 function formatEducationDates(item) {
-    const start = item.start_date ?? '';
-    const end = item.in_progress ? 'Present' : (item.end_date ?? '');
-    const hasRange = start && (end || item.in_progress);
-
-    return `${escapeHtml(start)}${hasRange ? ' – ' : ''}${escapeHtml(end)}`;
+    return escapeHtml(formatCvDateRange(item.start_date, item.end_date, { present: Boolean(item.in_progress) }));
 }
 
 function formatProjectDates(item) {
-    const start = item.start_date ?? '';
-    const end = item.in_progress ? 'Present' : (item.end_date ?? '');
-    const hasRange = start && (end || item.in_progress);
-
-    return `${escapeHtml(start)}${hasRange ? ' – ' : ''}${escapeHtml(end)}`;
+    return escapeHtml(formatCvDateRange(item.start_date, item.end_date, { present: Boolean(item.in_progress) }));
 }
 
 function sectionTitleHtml(section, settings = {}) {
@@ -220,7 +209,7 @@ export function renderCertifications(section, settings = {}) {
 
     const body = items.map((item) => {
         const issuer = item.issuer ?? '';
-        const date = item.date ?? '';
+        const date = formatCvDate(item.date ?? '');
         const subtitle = issuer && date ? `${issuer} · ${date}` : (issuer || date);
 
         return `<article class="cv-item">

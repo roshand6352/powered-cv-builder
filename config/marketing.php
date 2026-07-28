@@ -242,7 +242,7 @@ return [
         ],
         'company' => [
             ['label' => 'About us', 'href' => '/about'],
-            ['label' => 'Blog', 'href' => '/about'],
+            ['label' => 'Blog', 'href' => '/blog'],
             ['label' => 'Contact', 'href' => '/contact'],
         ],
         'legal' => [

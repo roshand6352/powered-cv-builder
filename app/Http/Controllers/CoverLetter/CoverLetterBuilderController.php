@@ -64,7 +64,7 @@ class CoverLetterBuilderController extends Controller
 
         $html = $this->renderer->render($coverLetter, $request->overrides(), [
             'template' => $request->input('template'),
-            'watermark' => false,
+            'watermark' => $this->renderer->shouldWatermarkForUser($request->user()),
         ]);
 
         return response($html)->header('Content-Type', 'text/html');

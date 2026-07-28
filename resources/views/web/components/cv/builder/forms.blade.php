@@ -159,17 +159,43 @@
                         </div>
                         <div class="flex items-end">
                             <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                                <input type="checkbox" x-model="item.current" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                                <input
+                                    type="checkbox"
+                                    x-model="item.current"
+                                    class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                >
                                 Currently working here
                             </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700">Start date</label>
-                            <input type="text" x-model="item.start_date" placeholder="Jan 2020" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input
+                                type="month"
+                                :value="monthInputValue(item.start_date)"
+                                @input="item.start_date = $event.target.value"
+                                :max="!item.current && item.end_date ? monthInputValue(item.end_date) : null"
+                                autocomplete="off"
+                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                            >
                         </div>
-                        <div>
+                        <div x-show="!item.current" x-cloak>
                             <label class="block text-sm font-medium text-slate-700">End date</label>
-                            <input type="text" x-model="item.end_date" placeholder="Dec 2023" :disabled="item.current" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 disabled:bg-slate-100">
+                            <input
+                                type="month"
+                                :value="monthInputValue(item.end_date)"
+                                @input="item.end_date = $event.target.value"
+                                :min="item.start_date ? monthInputValue(item.start_date) : null"
+                                autocomplete="off"
+                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                            >
+                            <p
+                                class="mt-1 text-xs text-red-600"
+                                x-show="isStartAfterEnd(item.start_date, item.end_date)"
+                                x-cloak
+                            >Start date cannot be after end date.</p>
+                        </div>
+                        <div x-show="item.current" x-cloak class="flex items-end">
+                            <p class="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600">End date: Present</p>
                         </div>
                         <div class="sm:col-span-2">
                             <div class="flex items-start justify-between gap-3">
@@ -228,27 +254,46 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700">Start date</label>
-                            <input type="text" x-model="item.start_date" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input
+                                type="month"
+                                :value="monthInputValue(item.start_date)"
+                                @input="item.start_date = $event.target.value"
+                                :max="!item.in_progress && item.end_date ? monthInputValue(item.end_date) : null"
+                                autocomplete="off"
+                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                            >
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <label class="block text-sm font-medium text-slate-700">End date</label>
-                            <div class="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <div x-show="!item.in_progress" x-cloak>
                                 <input
-                                    type="text"
-                                    x-model="item.end_date"
-                                    :disabled="item.in_progress"
-                                    class="block w-full flex-1 rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 disabled:bg-slate-100"
+                                    type="month"
+                                    :value="monthInputValue(item.end_date)"
+                                    @input="item.end_date = $event.target.value"
+                                    :min="item.start_date ? monthInputValue(item.start_date) : null"
+                                    autocomplete="off"
+                                    class="mt-1 block w-full min-w-0 rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
                                 >
-                                <label class="inline-flex shrink-0 items-center gap-2 text-sm text-slate-700">
-                                    <input
-                                        type="checkbox"
-                                        x-model="item.in_progress"
-                                        @change="if (item.in_progress) item.end_date = ''"
-                                        class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                                    >
-                                    In progress
-                                </label>
+                                <p
+                                    class="mt-1 text-xs text-red-600"
+                                    x-show="isStartAfterEnd(item.start_date, item.end_date)"
+                                    x-cloak
+                                >Start date cannot be after end date.</p>
                             </div>
+                            <p
+                                x-show="item.in_progress"
+                                x-cloak
+                                class="mt-1 rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600"
+                            >Present</p>
+                            <label class="mt-2 inline-flex max-w-full items-center gap-2 text-sm text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    x-model="item.in_progress"
+                                    @change="if (item.in_progress) item.end_date = ''"
+                                    class="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                >
+                                <span class="min-w-0">In progress</span>
+                            </label>
                         </div>
                         <div class="sm:col-span-2">
                             <div class="flex items-start justify-between gap-3">
@@ -330,27 +375,46 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700">Start date</label>
-                            <input type="text" x-model="item.start_date" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input
+                                type="month"
+                                :value="monthInputValue(item.start_date)"
+                                @input="item.start_date = $event.target.value"
+                                :max="!item.in_progress && item.end_date ? monthInputValue(item.end_date) : null"
+                                autocomplete="off"
+                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                            >
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <label class="block text-sm font-medium text-slate-700">End date</label>
-                            <div class="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <div x-show="!item.in_progress" x-cloak>
                                 <input
-                                    type="text"
-                                    x-model="item.end_date"
-                                    :disabled="item.in_progress"
-                                    class="block w-full flex-1 rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 disabled:bg-slate-100"
+                                    type="month"
+                                    :value="monthInputValue(item.end_date)"
+                                    @input="item.end_date = $event.target.value"
+                                    :min="item.start_date ? monthInputValue(item.start_date) : null"
+                                    autocomplete="off"
+                                    class="mt-1 block w-full min-w-0 rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
                                 >
-                                <label class="inline-flex shrink-0 items-center gap-2 text-sm text-slate-700">
-                                    <input
-                                        type="checkbox"
-                                        x-model="item.in_progress"
-                                        @change="if (item.in_progress) item.end_date = ''"
-                                        class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                                    >
-                                    In progress
-                                </label>
+                                <p
+                                    class="mt-1 text-xs text-red-600"
+                                    x-show="isStartAfterEnd(item.start_date, item.end_date)"
+                                    x-cloak
+                                >Start date cannot be after end date.</p>
                             </div>
+                            <p
+                                x-show="item.in_progress"
+                                x-cloak
+                                class="mt-1 rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600"
+                            >Present</p>
+                            <label class="mt-2 inline-flex max-w-full items-center gap-2 text-sm text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    x-model="item.in_progress"
+                                    @change="if (item.in_progress) item.end_date = ''"
+                                    class="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                                >
+                                <span class="min-w-0">In progress</span>
+                            </label>
                         </div>
                         <div class="sm:col-span-2">
                             <div class="flex items-start justify-between gap-3">
@@ -431,8 +495,14 @@
                             <input type="text" x-model="item.issuer" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700">Date</label>
-                            <input type="text" x-model="item.date" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <label class="block text-sm font-medium text-slate-700">Issue date</label>
+                            <input
+                                type="month"
+                                :value="monthInputValue(item.date)"
+                                @input="item.date = $event.target.value"
+                                autocomplete="off"
+                                class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                            >
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-slate-700">URL</label>

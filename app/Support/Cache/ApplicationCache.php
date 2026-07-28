@@ -3,6 +3,8 @@
 namespace App\Support\Cache;
 
 use App\Models\AiLog;
+use App\Models\Coupon;
+use App\Models\CouponRedemption;
 use App\Models\CvTemplate;
 use App\Models\Payment;
 use App\Models\Plan;
@@ -28,6 +30,8 @@ final class ApplicationCache
 
     public const FILAMENT_STATS_OVERVIEW = 'filament.dashboard.stats_overview';
 
+    public const FILAMENT_COUPON_STATS = 'filament.dashboard.coupon_stats';
+
     public static function forgetPlans(): void
     {
         foreach ([self::PLANS_ACTIVE, self::PLANS_WEBSITE, self::PLANS_FREE, self::PLANS_PRO] as $key) {
@@ -45,6 +49,7 @@ final class ApplicationCache
     public static function forgetFilamentDashboardStats(): void
     {
         Cache::forget(self::FILAMENT_STATS_OVERVIEW);
+        Cache::forget(self::FILAMENT_COUPON_STATS);
     }
 
     public static function registerInvalidation(): void
@@ -55,7 +60,7 @@ final class ApplicationCache
         CvTemplate::saved(fn () => self::forgetCvTemplates());
         CvTemplate::deleted(fn () => self::forgetCvTemplates());
 
-        foreach ([User::class, Payment::class, Subscription::class, AiLog::class] as $model) {
+        foreach ([User::class, Payment::class, Subscription::class, AiLog::class, Coupon::class, CouponRedemption::class] as $model) {
             $model::saved(fn () => self::forgetFilamentDashboardStats());
             $model::deleted(fn () => self::forgetFilamentDashboardStats());
         }

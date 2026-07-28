@@ -51,7 +51,7 @@ class PayFastService extends BaseService
             'name_last' => $names['last'],
             'email_address' => $user->email,
             'm_payment_id' => $payment->reference,
-            'amount' => number_format((float) $plan->price, 2, '.', ''),
+            'amount' => number_format((float) $payment->amount, 2, '.', ''),
             'item_name' => $plan->name.' Plan',
             'item_description' => $plan->description ?? config('app.name').' subscription',
             'custom_str1' => (string) $user->id,

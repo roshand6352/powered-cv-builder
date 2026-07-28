@@ -214,21 +214,30 @@
         .cl-layout-elegant .cl-role { font-style: italic; color: var(--cl-secondary); }
         .cl-layout-elegant .cl-subject { color: var(--cl-secondary); border-bottom: 1px solid color-mix(in srgb, var(--cl-secondary) 25%, white); padding-bottom: 0.35rem; }
 
+        .pdf-watermark,
         .cl-watermark {
-            position: absolute;
+            position: fixed;
             inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: none;
-            font-size: 3.5rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(15, 23, 42, {{ config('cv-templates.watermark.text_opacity', 0.12) }});
-            transform: rotate(-30deg);
             user-select: none;
-            z-index: 20;
+            z-index: 2147483000;
+            overflow: visible;
+            background: transparent;
+        }
+        .pdf-watermark__img,
+        .cl-watermark .cv-watermark-logo {
+            display: block;
+            width: {{ (int) config('cv-templates.watermark.logo_display_width_px', 900) }}px;
+            max-width: none;
+            height: auto;
+            opacity: {{ config('cv-templates.watermark.logo_opacity', 0.20) }};
+            transform: rotate({{ config('cv-templates.watermark.angle', -30) }}deg);
+            transform-origin: center center;
+            object-fit: contain;
+            image-rendering: auto;
         }
 
         @media (max-width: 768px) {
@@ -263,6 +272,12 @@
                 page-break-after: auto;
             }
             .cl-section { page-break-inside: avoid; break-inside: avoid-page; }
+            .pdf-watermark,
+            .cl-watermark {
+                position: fixed;
+                z-index: 2147483000;
+                overflow: visible;
+            }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
@@ -270,6 +285,17 @@
     </style>
 </head>
 <body>
+    @if ($watermark)
+        <div class="pdf-watermark" aria-hidden="true">
+            <img
+                class="pdf-watermark__img cv-watermark-logo"
+                src="{{ asset(config('cv-templates.watermark.logo', 'images/WATERMARK-LOGO.png')) }}"
+                width="4500"
+                height="827"
+                alt=""
+            >
+        </div>
+    @endif
     <div class="cl-page cl-layout-{{ $layout }}">
         @foreach ($order as $section)
             @continue(! $isEnabled($section))
@@ -372,10 +398,6 @@
                     @break
             @endswitch
         @endforeach
-
-        @if ($watermark)
-            <div class="cl-watermark" aria-hidden="true">{{ $watermarkText }}</div>
-        @endif
     </div>
 </body>
 </html>

@@ -19,11 +19,41 @@ function hashValue(value) {
     return JSON.stringify(value);
 }
 
-function wrapPreviewDocument({ title, layout, settings, bodyHtml }) {
+function escapeHtmlAttr(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function normalizeWatermarkOptions(watermark = null, showWatermark = false) {
+    if (! showWatermark || ! watermark?.logo_url) {
+        return null;
+    }
+
+    return {
+        logoUrl: watermark.logo_url,
+        opacity: Number(watermark.opacity ?? 0.20),
+        angle: Number(watermark.angle ?? -30),
+        widthPx: Number(watermark.width_px ?? 900),
+    };
+}
+
+function watermarkMarkup(watermark) {
+    if (! watermark) {
+        return '';
+    }
+
+    return `<div class="pdf-watermark" aria-hidden="true" style="--wm-opacity:${watermark.opacity};--wm-angle:${watermark.angle}deg;--wm-width:${watermark.widthPx}px"><img class="pdf-watermark__img cv-watermark-logo" src="${escapeHtmlAttr(watermark.logoUrl)}" width="4500" height="827" alt=""></div>`;
+}
+
+function wrapPreviewDocument({ title, layout, settings, bodyHtml, watermark = null }) {
     const font = settings?.font ?? 'figtree';
     const pageStyle = inlineStyle(settings);
     const sidebar = settings?.sidebar_position ?? 'none';
     const photo = settings?.photo_position ?? 'top';
+    const wmHtml = watermarkMarkup(watermark);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -38,6 +68,7 @@ function wrapPreviewDocument({ title, layout, settings, bodyHtml }) {
 </head>
 <body class="cv-body cv-body--preview cv-body--embedded">
     <div class="cv-page cv-layout-${layout}" data-layout="${layout}" data-mode="preview" data-sidebar="${sidebar}" data-photo="${photo}" style="${pageStyle}">
+        ${wmHtml}
         ${bodyHtml}
     </div>
 </body>
@@ -88,6 +119,10 @@ export class ClientPreviewRenderer {
 
     build(document, sectionsConfig, templateKey, templateCatalog = [], options = {}) {
         const focusSection = options.focusSection ?? null;
+        const watermark = normalizeWatermarkOptions(
+            options.watermark ?? null,
+            options.showWatermark ?? false,
+        );
         const layoutConfig = resolveLayoutConfig(document, templateKey, templateCatalog);
         const preview = transformDocument(document, sectionsConfig, layoutConfig);
         const settings = layoutConfig.settings;
@@ -123,7 +158,7 @@ export class ClientPreviewRenderer {
 
         const bodyHtml = assembleLayoutBody(preview.sections, sectionHtml, layoutConfig);
         const title = preview.personal_details?.full_name || 'CV Preview';
-        const html = wrapPreviewDocument({ title, layout, settings, bodyHtml });
+        const html = wrapPreviewDocument({ title, layout, settings, bodyHtml, watermark });
 
         return {
             html,
@@ -134,6 +169,7 @@ export class ClientPreviewRenderer {
             layout,
             settings,
             layoutConfig,
+            watermark,
         };
     }
 }

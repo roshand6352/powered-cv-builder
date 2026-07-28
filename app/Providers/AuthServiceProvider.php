@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Enums\RoleName;
 use App\Models\AiLog;
+use App\Models\BlogPost;
 use App\Models\CmsPage;
+use App\Models\Coupon;
 use App\Models\CvTemplate;
 use App\Models\Payment;
 use App\Models\Plan;
@@ -23,9 +25,11 @@ class AuthServiceProvider extends ServiceProvider
         User::class => \App\Policies\UserPolicy::class,
         Plan::class => \App\Policies\PlanPolicy::class,
         Payment::class => \App\Policies\PaymentPolicy::class,
+        Coupon::class => \App\Policies\CouponPolicy::class,
         Subscription::class => \App\Policies\SubscriptionPolicy::class,
         CvTemplate::class => \App\Policies\CvTemplatePolicy::class,
         AiLog::class => \App\Policies\AiLogPolicy::class,
+        BlogPost::class => \App\Policies\BlogPostPolicy::class,
         CmsPage::class => \App\Policies\CmsPagePolicy::class,
         Setting::class => \App\Policies\SettingPolicy::class,
         \Spatie\Permission\Models\Role::class => \App\Policies\RolePolicy::class,

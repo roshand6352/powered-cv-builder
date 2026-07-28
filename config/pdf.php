@@ -22,7 +22,7 @@ return [
     'hosts' => env('PDF_HOSTS', 'browsershot'),
 
     'quality' => [
-        'device_scale_factor' => (int) env('PDF_DEVICE_SCALE_FACTOR', 1),
+        'device_scale_factor' => (int) env('PDF_DEVICE_SCALE_FACTOR', 2),
         'print_background' => true,
     ],
 

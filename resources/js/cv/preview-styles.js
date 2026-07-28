@@ -178,6 +178,36 @@ export const PREVIEW_CSS = `
     .cv-layout-premium .cv-section-title { color: var(--cv-secondary); border-bottom-color: var(--cv-secondary); }
     .cv-layout-smart .cv-section-experience .cv-item { border-left: 2px solid var(--cv-accent-border); padding-left: 1rem; margin-left: .35rem; position: relative; }
     .cv-layout-smart .cv-section-experience .cv-item::before { content: ''; position: absolute; left: -.47rem; top: .4rem; width: .55rem; height: .55rem; border-radius: 50%; background: var(--cv-accent); }
+    .pdf-watermark {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        user-select: none;
+        z-index: 2147483000;
+        overflow: visible;
+        background: transparent;
+    }
+    .cv-body--preview .pdf-watermark,
+    .cv-body--embedded .pdf-watermark {
+        display: flex !important;
+    }
+    .pdf-watermark__img {
+        display: block !important;
+        width: var(--wm-width, 900px) !important;
+        max-width: none !important;
+        height: auto !important;
+        opacity: var(--wm-opacity, 0.20) !important;
+        transform: rotate(var(--wm-angle, -30deg)) !important;
+        transform-origin: center center !important;
+        object-fit: contain !important;
+        image-rendering: auto !important;
+    }
     @media (max-width: 768px) {
         .cv-body:not(.cv-body--preview) .cv-grid-sidebar { grid-template-columns: 1fr; }
         .cv-body:not(.cv-body--preview) .cv-aside { order: 2; }
@@ -189,6 +219,7 @@ export const PREVIEW_CSS = `
 export const THUMBNAIL_CSS = PREVIEW_CSS + `
     html, body.cv-body--thumbnail { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
     body.cv-body--thumbnail { font-family: __FONT_FAMILY__; display: flex; justify-content: center; align-items: flex-start; }
+    .cv-body--thumbnail .pdf-watermark { display: none !important; }
     .cv-thumb-wrap { width: 100%; height: 100%; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; }
     .cv-body--thumbnail .cv-page {
         width: 794px;

@@ -11,7 +11,11 @@
                     <div class="cv-item-subtitle">{{ trim(($item['company'] ?? '').(($item['company'] ?? false) && ($item['location'] ?? false) ? ' · ' : '').($item['location'] ?? '')) }}</div>
                 </div>
                 <div class="cv-item-meta">
-                    {{ $item['start_date'] ?? '' }}@if(($item['start_date'] ?? false) && (($item['end_date'] ?? false) || ($item['current'] ?? false))) – @endif{{ ($item['current'] ?? false) ? 'Present' : ($item['end_date'] ?? '') }}
+                    {{ \App\Support\Cv\CvDateFormatter::range(
+                        $item['start_date'] ?? null,
+                        $item['end_date'] ?? null,
+                        (bool) ($item['current'] ?? false),
+                    ) }}
                 </div>
             </div>
             @if ($item['description'] ?? false)

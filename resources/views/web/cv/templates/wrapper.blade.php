@@ -43,11 +43,14 @@
         style="{{ $pageStyle }}"
     >
         @if ($watermark)
-            <div class="cv-watermark" aria-hidden="true">
-                <div class="cv-watermark-inner">
-                    <span class="cv-watermark-primary">{{ $watermarkPrimaryText }}</span>
-                    <span class="cv-watermark-secondary">{{ $watermarkSecondaryText }}</span>
-                </div>
+            <div class="pdf-watermark" aria-hidden="true">
+                <img
+                    class="pdf-watermark__img cv-watermark-logo"
+                    src="{{ asset(config('cv-templates.watermark.logo', 'images/WATERMARK-LOGO.png')) }}"
+                    width="4500"
+                    height="827"
+                    alt=""
+                >
             </div>
         @endif
 

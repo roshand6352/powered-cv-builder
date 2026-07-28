@@ -2,9 +2,17 @@
 
 @php
     $activePlan = app(\App\Services\Subscription\SubscriptionService::class)->resolveActivePlan(auth()->user());
+    $showWatermark = app(\App\Services\Pdf\PdfWatermarkService::class)->shouldApply(auth()->user());
 
     $builderPayload = array_merge($builder->toArray(), [
         'has_ai_access' => ! $activePlan->isFree(),
+        'show_watermark' => $showWatermark,
+        'watermark' => [
+            'logo_url' => url(config('cv-templates.watermark.logo', 'images/WATERMARK-LOGO.png')),
+            'opacity' => (float) config('cv-templates.watermark.logo_opacity', 0.20),
+            'angle' => (float) config('cv-templates.watermark.angle', -30),
+            'width_px' => (int) config('cv-templates.watermark.logo_display_width_px', 900),
+        ],
         'urls' => [
             'autosave' => route('cvs.builder.autosave', $cv),
             'update' => route('cvs.builder.update', $cv),

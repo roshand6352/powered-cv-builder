@@ -21,6 +21,11 @@ import { applyPreviewPatches } from './preview-patcher';
 import { dedupeWithinMs, perfLog, scheduleFrame } from './builder-perf';
 import { prepareEditorHtml, richTextToPlainText } from '../shared/rich-text-sanitize';
 import { openAiUpgradeModal } from '../shared/ai-upgrade';
+import {
+    isStartAfterEnd,
+    normalizeDocumentDates,
+    toMonthInputValue,
+} from './date-format';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -31,7 +36,7 @@ export function registerCvBuilder() {
         title: config.title,
         status: config.status,
         // LIVE PREVIEW FIX: single builder state — preview reads only from document
-        document: clone(config.document),
+        document: normalizeDocumentDates(clone(config.document)),
         sections: config.sections,
         templates: config.templates,
         templateCatalog: config.template_catalog ?? [],
@@ -55,6 +60,8 @@ export function registerCvBuilder() {
         profileImageError: null,
         aiUsage: { used: 0, limit: 0, remaining: null },
         hasAiAccess: config.has_ai_access ?? false,
+        showWatermark: config.show_watermark ?? false,
+        watermark: config.watermark ?? null,
         errors: {},
         debounceTimer: null,
         previewTimer: null,
@@ -67,6 +74,9 @@ export function registerCvBuilder() {
         pendingPreviewSection: null,
         previewScaleSnapshot: null,
         previewChannel: null,
+
+        monthInputValue: toMonthInputValue,
+        isStartAfterEnd,
 
         init() {
             this.syncTemplateState(this.activeTemplate);
@@ -724,6 +734,7 @@ export function registerCvBuilder() {
 
             const afterWrite = () => {
                 this.previewScaleSnapshot = null;
+                this.ensurePreviewWatermark(frame.contentDocument);
                 this.fitPreviewScale();
                 this.restorePreviewScroll(scroll);
             };
@@ -828,9 +839,14 @@ export function registerCvBuilder() {
             if (existingLayout && replacement) {
                 existingLayout.replaceWith(replacement);
             } else {
+                const watermark = page.querySelector('.pdf-watermark');
                 page.innerHTML = result.bodyHtml;
+                if (watermark) {
+                    page.prepend(watermark);
+                }
             }
 
+            this.ensurePreviewWatermark(doc);
             this.restorePreviewScroll(scroll);
 
             this.$nextTick(() => {
@@ -847,12 +863,55 @@ export function registerCvBuilder() {
                 this.applySidebarPhotoPatch(result);
             }
 
+            this.ensurePreviewWatermark(this.$refs.previewFrame?.contentDocument);
+
             const scroll = this.capturePreviewScroll();
 
             scheduleFrame(() => {
                 this.fitPreviewScale();
                 this.restorePreviewScroll(scroll);
             });
+        },
+
+        ensurePreviewWatermark(doc = null) {
+            const documentRef = doc ?? this.$refs.previewFrame?.contentDocument;
+            const page = documentRef?.querySelector('.cv-page');
+
+            if (! page) {
+                return;
+            }
+
+            const existing = page.querySelector('.pdf-watermark');
+
+            if (! this.showWatermark || ! this.watermark?.logo_url) {
+                existing?.remove();
+
+                return;
+            }
+
+            if (existing) {
+                return;
+            }
+
+            const opacity = Number(this.watermark.opacity ?? 0.20);
+            const angle = Number(this.watermark.angle ?? -30);
+            const widthPx = Number(this.watermark.width_px ?? 900);
+            const wrap = documentRef.createElement('div');
+            wrap.className = 'pdf-watermark';
+            wrap.setAttribute('aria-hidden', 'true');
+            wrap.style.setProperty('--wm-opacity', String(opacity));
+            wrap.style.setProperty('--wm-angle', `${angle}deg`);
+            wrap.style.setProperty('--wm-width', `${widthPx}px`);
+
+            const img = documentRef.createElement('img');
+            img.className = 'pdf-watermark__img cv-watermark-logo';
+            img.src = this.watermark.logo_url;
+            img.width = 4500;
+            img.height = 827;
+            img.alt = '';
+
+            wrap.appendChild(img);
+            page.prepend(wrap);
         },
 
         tryPatchPreviewSections(result, focusSection = null) {
@@ -911,7 +970,11 @@ export function registerCvBuilder() {
                 this.sections,
                 this.activeTemplate,
                 this.templateCatalog,
-                { focusSection },
+                {
+                    focusSection,
+                    showWatermark: this.showWatermark,
+                    watermark: this.watermark,
+                },
             );
 
             if (result.layoutChanged || ! this.previewFrameReady) {

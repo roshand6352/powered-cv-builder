@@ -22,6 +22,7 @@ class SubscriptionPayRequest extends FormRequest
             'plan_id' => ['required', 'integer'],
             'plan_name' => ['required', 'string', 'max:255'],
             'plan_price' => ['required', 'numeric', 'min:0'],
+            'coupon_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 
