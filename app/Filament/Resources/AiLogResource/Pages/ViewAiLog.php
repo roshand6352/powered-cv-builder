@@ -13,6 +13,6 @@ class ViewAiLog extends ViewRecord
     {
         parent::mount($record);
 
-        $this->record->loadMissing('user');
+        $this->record->loadMissing(['user', 'cv', 'coverLetter']);
     }
 }

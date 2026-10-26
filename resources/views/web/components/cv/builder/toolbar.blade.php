@@ -70,6 +70,21 @@
 
             <button
                 type="button"
+                @click="hasAiAccess
+                    ? window.dispatchEvent(new CustomEvent('open-linkedin-pdf-import-modal'))
+                    : window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'LinkedIn PDF import is available on Pro plans. Upgrade to unlock this feature.', url: urls.subscription } }))"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-2 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:px-3"
+            >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5A3.375 3.375 0 0010.125 2.25H6.75A2.25 2.25 0 004.5 4.5v15A2.25 2.25 0 006.75 21.75h10.5a2.25 2.25 0 002.25-2.25V14.25z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 2.625V6.75A1.125 1.125 0 0014.625 7.875H18.75" />
+                </svg>
+                <span class="hidden sm:inline">Import from LinkedIn PDF</span>
+                <span class="sm:hidden">Import PDF</span>
+            </button>
+
+            <button
+                type="button"
                 @click="exportPdf()"
                 :disabled="pdfExportStatus === 'generating'"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"

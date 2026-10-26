@@ -8,6 +8,9 @@ use App\Jobs\ProcessAiRequestJob;
 use App\Models\AiLog;
 use App\Models\User;
 use App\Services\BaseService;
+use App\Support\Cv\CvDocumentMigrator;
+use App\Support\Cv\CvDocumentValidationRules;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -44,6 +47,69 @@ class AiService extends BaseService
     public function generateCoverLetter(User $user, array $payload): AiLog
     {
         return $this->dispatch(AiFeature::CoverLetterGeneration, $user, $payload);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public function analyzeJobMatch(array $payload): array
+    {
+        $messages = $this->promptBuilder->buildJobMatch($payload);
+        $completion = $this->aiClient->chat($messages, [
+            'response_format' => ['type' => 'json_object'],
+        ]);
+
+        $decoded = $this->responseParser->decodeJsonContent($completion->content);
+
+        if ($decoded === null) {
+            throw new \RuntimeException('AI returned invalid JSON.');
+        }
+
+        return [
+            'score' => isset($decoded['score']) ? (int) $decoded['score'] : 0,
+            'matched_keywords' => array_values(array_map('strval', $decoded['matched_keywords'] ?? [])),
+            'missing_keywords' => array_values(array_map('strval', $decoded['missing_keywords'] ?? [])),
+            'strengths' => array_values(array_map('strval', $decoded['strengths'] ?? [])),
+            'improvements' => array_values(array_map('strval', $decoded['improvements'] ?? [])),
+            'summary' => (string) ($decoded['summary'] ?? ''),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapLinkedinPdfImport(array $payload): array
+    {
+        $messages = $this->promptBuilder->buildLinkedinPdfImport($payload);
+        $completion = $this->aiClient->chat($messages, [
+            'response_format' => ['type' => 'json_object'],
+        ]);
+
+        $decoded = $this->responseParser->decodeJsonContent($completion->content);
+
+        if ($decoded === null) {
+            throw new \RuntimeException('AI returned invalid JSON.');
+        }
+
+        $document = $decoded['json_data'] ?? $decoded;
+
+        if (! is_array($document)) {
+            throw new \RuntimeException('AI returned an invalid CV document.');
+        }
+
+        $document = CvDocumentMigrator::migrate($document);
+
+        $validator = Validator::make(
+            ['json_data' => $document],
+            CvDocumentValidationRules::rules(),
+        );
+
+        if ($validator->fails()) {
+            throw new \RuntimeException('AI returned CV JSON that does not match the builder schema.');
+        }
+
+        return $document;
     }
 
     public function process(AiLog $log): AiLog

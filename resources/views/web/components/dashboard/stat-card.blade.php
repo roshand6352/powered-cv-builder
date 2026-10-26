@@ -25,7 +25,7 @@
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
             <p class="text-sm font-medium text-muted">{{ $label }}</p>
-            <p class="mt-2 break-words text-2xl font-bold tracking-tight text-navy sm:text-3xl">{{ $value }}</p>
+            <p class="mt-2 text-3xl font-bold tracking-tight text-navy">{{ $value }}</p>
             @if ($hint)
                 <p class="mt-1 text-sm text-muted">{{ $hint }}</p>
             @endif

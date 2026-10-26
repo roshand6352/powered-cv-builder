@@ -2,12 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\AiFeature;
-use App\Enums\AiLogStatus;
 use App\Filament\Resources\AiLogResource\Pages;
-use App\Models\AiLog;
-use Filament\Forms;
-use Filament\Forms\Form;
+use App\Models\JobMatchScore;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -18,7 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AiLogResource extends Resource
 {
-    protected static ?string $model = AiLog::class;
+    protected static ?string $model = JobMatchScore::class;
 
     protected static ?string $navigationGroup = 'AI & Analytics';
 
@@ -26,63 +22,36 @@ class AiLogResource extends Resource
 
     protected static ?string $navigationLabel = 'AI Logs';
 
-    public static function form(Form $form): Form
-    {
-        return $form->schema([
-            Forms\Components\Select::make('user_id')->relationship('user', 'name')->disabled(),
-            Forms\Components\TextInput::make('feature')->disabled(),
-            Forms\Components\Select::make('status')
-                ->options(collect(AiLogStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()]))
-                ->disabled(),
-            Forms\Components\TextInput::make('model')->disabled(),
-            Forms\Components\TextInput::make('tokens_used')->numeric()->disabled(),
-            Forms\Components\TextInput::make('credits_used')->numeric()->disabled(),
-        ])->columns(2);
-    }
-
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
-            Infolists\Components\Section::make('Request')->schema([
+            Infolists\Components\Section::make('Analysis')->schema([
                 Infolists\Components\TextEntry::make('user.name'),
-                Infolists\Components\TextEntry::make('feature')
-                    ->formatStateUsing(fn ($state) => AiFeature::tryFrom((string) $state)?->label() ?? $state)
-                    ->badge(),
-                Infolists\Components\TextEntry::make('status')
-                    ->formatStateUsing(fn ($state) => $state instanceof AiLogStatus ? $state->label() : (string) ($state ?? ''))
-                    ->badge(),
-                Infolists\Components\TextEntry::make('model')
+                Infolists\Components\TextEntry::make('cv.title')->label('CV'),
+                Infolists\Components\TextEntry::make('coverLetter.title')
+                    ->label('Cover Letter')
+                    ->placeholder('No Cover Letter'),
+                Infolists\Components\TextEntry::make('score')
+                    ->suffix('%')
                     ->placeholder('—'),
-                Infolists\Components\TextEntry::make('tokens_used'),
-                Infolists\Components\TextEntry::make('credits_used'),
+                Infolists\Components\TextEntry::make('status')
+                    ->badge(),
                 Infolists\Components\TextEntry::make('created_at')->dateTime(),
-                Infolists\Components\TextEntry::make('completed_at')->dateTime()->placeholder('—'),
             ])->columns(2),
-            Infolists\Components\Section::make('Result')->schema([
-                Infolists\Components\TextEntry::make('result')
-                    ->placeholder('—')
-                    ->columnSpanFull(),
-                Infolists\Components\TextEntry::make('error_message')
-                    ->color('danger')
+            Infolists\Components\Section::make('Job Description')->schema([
+                Infolists\Components\TextEntry::make('job_description')
                     ->placeholder('—')
                     ->columnSpanFull(),
             ]),
-            Infolists\Components\Section::make('Payload')->collapsed()->schema([
-                Infolists\Components\TextEntry::make('request')
-                    ->label('Request')
-                    ->state(fn (AiLog $record): ?string => static::formatJsonState($record->request))
-                    ->placeholder('—')
-                    ->fontFamily(FontFamily::Mono)
-                    ->copyable()
-                    ->columnSpanFull(),
-                Infolists\Components\TextEntry::make('response')
+            Infolists\Components\Section::make('AI JSON Response')->schema([
+                Infolists\Components\TextEntry::make('result_json')
                     ->label('Response')
-                    ->state(fn (AiLog $record): ?string => static::formatJsonState($record->response))
+                    ->state(fn (JobMatchScore $record): ?string => static::formatJsonState($record->result_json))
                     ->placeholder('—')
                     ->fontFamily(FontFamily::Mono)
                     ->copyable()
                     ->columnSpanFull(),
-            ]),
+            ])->collapsed(),
         ]);
     }
 
@@ -91,49 +60,32 @@ class AiLogResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user.name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('feature')
-                    ->formatStateUsing(fn ($state) => AiFeature::tryFrom($state)?->label() ?? $state)
-                    ->badge()
+                Tables\Columns\TextColumn::make('cv.title')->label('CV')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('coverLetter.title')
+                    ->label('Cover Letter')
+                    ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('score')
+                    ->suffix('%')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->formatStateUsing(fn ($state) => $state instanceof AiLogStatus ? $state->label() : (string) ($state ?? ''))
                     ->badge()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('tokens_used')->sortable(),
-                Tables\Columns\TextColumn::make('credits_used')->sortable(),
-                Tables\Columns\TextColumn::make('model')->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
-            ->filters([
-                Tables\Filters\SelectFilter::make('feature')
-                    ->options(collect(AiFeature::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()])),
-                Tables\Filters\SelectFilter::make('status')
-                    ->options(collect(AiLogStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()])),
-                Tables\Filters\Filter::make('created_at')
-                    ->form([
-                        Forms\Components\DatePicker::make('from'),
-                        Forms\Components\DatePicker::make('until'),
-                    ])
-                    ->query(function ($query, array $data) {
-                        return $query
-                            ->when($data['from'], fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
-                            ->when($data['until'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
-                    }),
-            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
 
     public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit($record): bool
     {
         return false;
     }
@@ -155,7 +107,7 @@ class AiLogResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('user');
+        return parent::getEloquentQuery()->with(['user', 'cv', 'coverLetter']);
     }
 
     public static function getPages(): array

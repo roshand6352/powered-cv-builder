@@ -22,8 +22,8 @@
         class="flex min-h-screen flex-col"
     >
         <header class="sticky top-0 z-40 border-b border-slate-200 bg-white">
-            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-                <div class="min-w-0">
+            <div class="mx-auto flex h-auto min-h-14 max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-6">
+                <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-slate-900" x-text="title"></p>
                     <p
                         class="text-xs"
@@ -35,7 +35,7 @@
                     ></p>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
                     <span
                         class="hidden text-xs text-slate-400 sm:inline"
                         x-show="lastUpdateAt"
@@ -48,21 +48,24 @@
                         :disabled="pdfExportStatus === 'generating' || ! previewFrameReady"
                         class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12M12 16.5V3" />
                         </svg>
-                        <span x-show="pdfExportStatus !== 'generating'">Download PDF</span>
-                        <span x-show="pdfExportStatus === 'generating'">Generating...</span>
+                        <span class="hidden sm:inline" x-show="pdfExportStatus !== 'generating'">Download PDF</span>
+                        <span class="hidden sm:inline" x-show="pdfExportStatus === 'generating'">Generating...</span>
+                        <span class="sm:hidden" x-show="pdfExportStatus !== 'generating'">PDF</span>
+                        <span class="sm:hidden" x-show="pdfExportStatus === 'generating'">…</span>
                     </button>
 
                     <a
                         href="{{ route('cvs.builder', $cv) }}"
                         class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                         </svg>
-                        Edit CV
+                        <span class="hidden sm:inline">Edit CV</span>
+                        <span class="sm:hidden">Edit</span>
                     </a>
                 </div>
             </div>

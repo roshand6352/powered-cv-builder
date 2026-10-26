@@ -1,4 +1,10 @@
 <x-dashboard.layout title="CVs">
+    @php
+        $hasLinkedinImportAccess = ! app(\App\Services\Subscription\SubscriptionService::class)
+            ->resolveActivePlan(auth()->user())
+            ->isFree();
+    @endphp
+
     <x-slot name="header">
         <x-dashboard.page-header
             title="My CVs"
@@ -22,15 +28,35 @@
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p class="text-sm text-muted">{{ $cvs->count() }} {{ Str::plural('CV', $cvs->count()) }}</p>
 
-        <form method="POST" action="{{ route('cvs.store') }}" class="w-full sm:w-auto">
-            @csrf
-            <button type="submit" class="dash-btn-primary w-full justify-center sm:w-auto">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Create new CV
-            </button>
-        </form>
+        <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+            @auth
+                <button
+                    type="button"
+                    @if ($hasLinkedinImportAccess)
+                        @click="window.dispatchEvent(new CustomEvent('open-linkedin-pdf-import-modal'))"
+                    @else
+                        @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'LinkedIn PDF import is available on Pro plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                    @endif
+                    class="dash-btn-secondary w-full justify-center sm:w-auto"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5A3.375 3.375 0 0010.125 2.25H6.75A2.25 2.25 0 004.5 4.5v15A2.25 2.25 0 006.75 21.75h10.5a2.25 2.25 0 002.25-2.25V14.25z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 2.625V6.75A1.125 1.125 0 0014.625 7.875H18.75" />
+                    </svg>
+                    Import from LinkedIn PDF
+                </button>
+            @endauth
+
+            <form method="POST" action="{{ route('cvs.store') }}" class="w-full sm:w-auto">
+                @csrf
+                <button type="submit" class="dash-btn-primary w-full justify-center sm:w-auto">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Create CV
+                </button>
+            </form>
+        </div>
     </div>
 
     @if ($cvs->isEmpty())
@@ -199,12 +225,12 @@
                             role="alert"
                         ></p>
 
-                        <div class="mt-6 flex justify-end gap-3">
+                        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                             <button
                                 type="button"
                                 @click="closeDelete()"
                                 :disabled="deleting"
-                                class="dash-btn-secondary px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+                                class="dash-btn-secondary w-full justify-center px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                             >
                                 Cancel
                             </button>
@@ -212,7 +238,7 @@
                                 type="button"
                                 @click="confirmDelete()"
                                 :disabled="deleting"
-                                class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
                             >
                                 <svg
                                     x-show="deleting"
@@ -233,4 +259,9 @@
             </div>
         </div>
     @endif
+
+    @auth
+        <x-linkedin-import-modal />
+        <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />
+    @endauth
 </x-dashboard.layout>

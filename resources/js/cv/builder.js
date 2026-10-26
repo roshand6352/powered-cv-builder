@@ -28,6 +28,32 @@ import {
 } from './date-format';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+const ensureItemIds = (items = []) => items.map((item) => ({
+    ...item,
+    id: item?.id || crypto.randomUUID(),
+}));
+const mergeImportedDocument = (currentDocument, importedDocument) => {
+    const merged = clone(currentDocument ?? {});
+    const imported = clone(importedDocument ?? {});
+
+    merged.personal_details = {
+        ...(merged.personal_details ?? {}),
+        ...(imported.personal_details ?? {}),
+    };
+
+    ['experience', 'education', 'skills', 'certifications', 'languages', 'projects'].forEach((key) => {
+        if (Array.isArray(imported[key])) {
+            merged[key] = ensureItemIds(imported[key]);
+        }
+    });
+
+    merged.meta = {
+        ...(merged.meta ?? {}),
+        ...(imported.meta ?? {}),
+    };
+
+    return merged;
+};
 
 export function registerCvBuilder() {
     window.Alpine.data('cvBuilder', (config) => ({
@@ -60,6 +86,8 @@ export function registerCvBuilder() {
         profileImageError: null,
         aiUsage: { used: 0, limit: 0, remaining: null },
         hasAiAccess: config.has_ai_access ?? false,
+        linkedinImportPrefilled: config.linkedin_import_prefilled ?? false,
+        linkedinImportReadyBound: null,
         showWatermark: config.show_watermark ?? false,
         watermark: config.watermark ?? null,
         errors: {},
@@ -219,6 +247,27 @@ export function registerCvBuilder() {
             clearTimeout(this.previewBroadcastTimer);
             clearTimeout(this.previewScaleTimer);
             this.previewResizeObserver?.disconnect();
+        },
+
+        applyLinkedinImport(importedDocument) {
+            if (! importedDocument || typeof importedDocument !== 'object') {
+                return;
+            }
+
+            const mergedDocument = normalizeDocumentDates(mergeImportedDocument(this.document, importedDocument));
+            mergedDocument.template = clone(this.document.template ?? mergedDocument.template ?? {});
+            this.document = mergedDocument;
+            this.ensureDocumentSections();
+            this.activeSection = this.document.meta?.section_order?.[0]
+                ?? this.document.meta?.enabled_sections?.[0]
+                ?? 'personal_details';
+            this.$store.builderStore.bind(this.document, this.sections);
+            this.previewRenderer.invalidateAll();
+            this.linkedinImportPrefilled = true;
+            this.isDirty = true;
+            this.errors = {};
+            this.saveStatus = 'pending';
+            this.refreshPreview();
         },
 
         bindLeaveSaveHandlers() {
@@ -643,6 +692,11 @@ export function registerCvBuilder() {
         queueAutosave() {
             clearTimeout(this.debounceTimer);
             this.saveStatus = 'pending';
+
+            if (this.linkedinImportPrefilled) {
+                return;
+            }
+
             this.debounceTimer = setTimeout(() => this.autosave(), this.debounceMs);
         },
 
@@ -1021,7 +1075,7 @@ export function registerCvBuilder() {
         async flushAutosave() {
             clearTimeout(this.debounceTimer);
 
-            if (! this.isDirty) {
+            if (! this.isDirty || this.linkedinImportPrefilled) {
                 return;
             }
 
@@ -1029,7 +1083,7 @@ export function registerCvBuilder() {
         },
 
         flushAutosaveKeepalive() {
-            if (! this.isDirty || ! this.urls.autosave) {
+            if (! this.isDirty || ! this.urls.autosave || this.linkedinImportPrefilled) {
                 return;
             }
 
@@ -1129,7 +1183,7 @@ export function registerCvBuilder() {
         },
 
         async autosave() {
-            if (! this.isDirty) {
+            if (! this.isDirty || this.linkedinImportPrefilled) {
                 return;
             }
 
@@ -1182,6 +1236,7 @@ export function registerCvBuilder() {
                 const { data } = await axios.put(this.urls.update, payload);
 
                 this.applyCvResponse(data.cv);
+                this.linkedinImportPrefilled = false;
                 this.saveStatus = publish ? 'published' : 'saved';
                 this.isDirty = false;
                 this.errors = {};
@@ -1289,6 +1344,10 @@ export function registerCvBuilder() {
         },
 
         saveStatusLabel() {
+            if (this.linkedinImportPrefilled) {
+                return 'Imported changes not saved';
+            }
+
             return {
                 idle: 'All changes saved',
                 pending: 'Unsaved changes',
