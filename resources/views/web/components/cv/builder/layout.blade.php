@@ -1,11 +1,23 @@
-@props(['cv', 'builder'])
+@props([
+    'cv',
+    'builder',
+    'linkedinImportDocument' => null,
+    'linkedinImportApplied' => false,
+])
 
 @php
     $activePlan = app(\App\Services\Subscription\SubscriptionService::class)->resolveActivePlan(auth()->user());
     $showWatermark = app(\App\Services\Pdf\PdfWatermarkService::class)->shouldApply(auth()->user());
+    $builderData = $builder->toArray();
 
-    $builderPayload = array_merge($builder->toArray(), [
+    if (is_array($linkedinImportDocument)) {
+        $builderData['document'] = app(\App\Services\Cv\LinkedInPdfImportService::class)
+            ->mergeIntoDocument($builderData['document'] ?? [], $linkedinImportDocument);
+    }
+
+    $builderPayload = array_merge($builderData, [
         'has_ai_access' => ! $activePlan->isFree(),
+        'linkedin_import_prefilled' => (bool) $linkedinImportApplied,
         'show_watermark' => $showWatermark,
         'watermark' => [
             'logo_url' => url(config('cv-templates.watermark.logo', 'images/WATERMARK-LOGO.png')),
@@ -31,6 +43,8 @@
             'subscription' => route('dashboard.subscription'),
             'render' => route('cvs.render.show', ['cv' => $cv, 'template' => '__TEMPLATE__']),
             'livePreview' => route('cv.preview', $cv),
+            'linkedinPdfImportStatus' => route('linkedin-pdf-import.status'),
+            'linkedinPdfImportConsume' => route('linkedin-pdf-import.consume'),
         ],
     ]);
 @endphp
@@ -63,9 +77,21 @@
 
         @if (session('status') === 'template-selected')
             <div class="shrink-0 border-b border-brand-200 bg-brand-50 px-4 py-2.5 text-center text-sm text-brand-800 sm:px-6">
-                Template applied. Your live preview is ready — start filling in your details.
+                @if ($linkedinImportApplied)
+                    Template applied. Your LinkedIn import is ready in the form — review and edit, then Save when you're ready.
+                @else
+                    Template applied. Your live preview is ready — start filling in your details.
+                @endif
             </div>
         @endif
+
+        <div
+            x-show="linkedinImportPrefilled"
+            x-cloak
+            class="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:px-6"
+        >
+            LinkedIn data has been imported into this form locally. Review every field, then click Save Draft or Publish when you're ready.
+        </div>
 
         <div class="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
             {{-- Left: scrollable form panel (45%) --}}
@@ -88,6 +114,7 @@
         </div>
     </div>
 
+    <x-linkedin-import-modal />
     <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />
 </body>
 </html>

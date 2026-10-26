@@ -9,11 +9,13 @@ use App\Http\Controllers\Cv\CvPreviewController;
 use App\Http\Controllers\Cv\CreateCvFromTemplateController;
 use App\Http\Controllers\Cv\CvBuilderController;
 use App\Http\Controllers\Cv\CvController as CvDraftController;
+use App\Http\Controllers\Cv\LinkedinPdfImportController;
 use App\Http\Controllers\CvController as CvPdfController;
 use App\Http\Controllers\Cv\CvTemplateSelectionController;
 use App\Http\Controllers\Cv\CvTemplateRenderController;
 use App\Http\Controllers\Cv\CvTemplatePreviewController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\JobMatchController;
 use App\Http\Controllers\Pdf\PdfExportController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\ProfileController;
@@ -46,6 +48,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cvs/{cv}/builder', [CvBuilderController::class, 'edit'])->name('cvs.builder');
     Route::put('/cvs/{cv}/builder', [CvBuilderController::class, 'update'])->name('cvs.builder.update');
     Route::patch('/cvs/{cv}/builder/autosave', [CvBuilderController::class, 'autosave'])->name('cvs.builder.autosave');
+    Route::post('/linkedin-pdf-import', [LinkedinPdfImportController::class, 'store'])
+        ->middleware('premium')
+        ->name('linkedin-pdf-import.store');
+    Route::get('/linkedin-pdf-import/status', [LinkedinPdfImportController::class, 'status'])
+        ->name('linkedin-pdf-import.status');
+    Route::post('/linkedin-pdf-import/consume', [LinkedinPdfImportController::class, 'consume'])
+        ->name('linkedin-pdf-import.consume');
+    Route::post('/linkedin-pdf-import/continue', [LinkedinPdfImportController::class, 'continueToTemplates'])
+        ->name('linkedin-pdf-import.continue');
 
     Route::get('/cvs/{cv}/render/{template?}', [CvTemplateRenderController::class, 'show'])->name('cvs.render.show');
     Route::post('/cvs/{cv}/render', [CvTemplateRenderController::class, 'live'])->name('cvs.render.live');
@@ -108,6 +119,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->group(function () 
     Route::get('/subscription', [DashboardController::class, 'subscription'])->name('dashboard.subscription');
     Route::get('/billing', [DashboardController::class, 'billing'])->name('dashboard.billing');
     Route::get('/profile', [DashboardController::class, 'profile'])->name('dashboard.profile');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/job-match', [JobMatchController::class, 'index'])->name('job-match');
+    Route::post('/job-match', [JobMatchController::class, 'store'])->name('job-match.store');
 });
 
 Route::middleware('auth')->group(function () {

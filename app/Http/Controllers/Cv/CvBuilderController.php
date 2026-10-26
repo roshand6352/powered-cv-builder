@@ -8,6 +8,7 @@ use App\Http\Requests\Cv\AutosaveCvBuilderRequest;
 use App\Http\Requests\Cv\SaveCvBuilderRequest;
 use App\Models\Cv;
 use App\Services\Cv\CvBuilderService;
+use App\Services\Cv\LinkedInPdfImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -16,6 +17,7 @@ class CvBuilderController extends Controller
 {
     public function __construct(
         protected CvBuilderService $cvBuilderService,
+        protected LinkedInPdfImportService $linkedInPdfImportService,
     ) {}
 
     public function edit(Cv $cv): View|RedirectResponse
@@ -26,9 +28,13 @@ class CvBuilderController extends Controller
             return redirect()->route('cvs.templates', $cv);
         }
 
+        $linkedinImportDocument = $this->linkedInPdfImportService->pullCompletedDocument(auth()->user());
+
         return view('web.cv.builder.index', [
             'cv' => $cv,
             'builder' => $this->cvBuilderService->getBuilderData($cv),
+            'linkedinImportDocument' => $linkedinImportDocument,
+            'linkedinImportApplied' => $linkedinImportDocument !== null,
         ]);
     }
 

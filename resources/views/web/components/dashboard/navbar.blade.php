@@ -20,22 +20,36 @@
         </div>
 
         <div class="flex shrink-0 items-center gap-2 sm:gap-3">
-            <a
-                href="{{ route('dashboard.cvs') }}"
-                class="dash-btn-primary p-2.5 sm:hidden"
-                aria-label="New CV"
-            >
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-            </a>
+            @unless (request()->routeIs(
+                'dashboard',
+                'dashboard.cvs',
+                'dashboard.cover-letters',
+                'dashboard.profile',
+                'dashboard.billing',
+                'dashboard.subscription',
+                'job-match',
+                'job-match.*',
+                'cvs.cover-letters.*',
+                'cover-letters.*',
+                'profile.edit',
+            ))
+                <a
+                    href="{{ route('dashboard.cvs') }}"
+                    class="dash-btn-primary p-2.5 sm:hidden"
+                    aria-label="New CV"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </a>
 
-            <a href="{{ route('dashboard.cvs') }}" class="dash-btn-primary hidden sm:inline-flex">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                New CV
-            </a>
+                <a href="{{ route('dashboard.cvs') }}" class="dash-btn-primary hidden sm:inline-flex">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    New CV
+                </a>
+            @endunless
 
             <x-marketing.user-dropdown />
         </div>

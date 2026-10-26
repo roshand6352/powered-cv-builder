@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('queue:prune-batches --hours=48')->daily();
 Schedule::command('model:prune')->daily();
 Schedule::command('subscriptions:expire')->hourly();
+Schedule::command('queue:work --stop-when-empty')->everyMinute();

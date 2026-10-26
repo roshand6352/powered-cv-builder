@@ -8,6 +8,7 @@ use App\Models\BlogPost;
 use App\Models\CmsPage;
 use App\Models\Coupon;
 use App\Models\CvTemplate;
+use App\Models\JobMatchScore;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Setting;
@@ -29,6 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         Subscription::class => \App\Policies\SubscriptionPolicy::class,
         CvTemplate::class => \App\Policies\CvTemplatePolicy::class,
         AiLog::class => \App\Policies\AiLogPolicy::class,
+        JobMatchScore::class => \App\Policies\JobMatchScorePolicy::class,
         BlogPost::class => \App\Policies\BlogPostPolicy::class,
         CmsPage::class => \App\Policies\CmsPagePolicy::class,
         Setting::class => \App\Policies\SettingPolicy::class,

@@ -32,6 +32,13 @@ final class ApplicationCache
 
     public const FILAMENT_COUPON_STATS = 'filament.dashboard.coupon_stats';
 
+    public const LINKEDIN_PDF_IMPORT_STATUS_PREFIX = 'linkedin_pdf_import.status.';
+
+    public static function linkedinPdfImportStatusKey(int $userId): string
+    {
+        return self::LINKEDIN_PDF_IMPORT_STATUS_PREFIX.$userId;
+    }
+
     public static function forgetPlans(): void
     {
         foreach ([self::PLANS_ACTIVE, self::PLANS_WEBSITE, self::PLANS_FREE, self::PLANS_PRO] as $key) {

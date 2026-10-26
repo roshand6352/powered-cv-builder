@@ -58,6 +58,11 @@ class Cv extends Model
         return $this->hasMany(CoverLetter::class);
     }
 
+    public function jobMatchScores(): HasMany
+    {
+        return $this->hasMany(JobMatchScore::class);
+    }
+
     public function pdfExports(): MorphMany
     {
         return $this->morphMany(PdfExport::class, 'exportable');

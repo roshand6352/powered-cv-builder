@@ -34,6 +34,12 @@ return [
             'active' => 'dashboard.billing',
         ],
         [
+            'label' => 'Job Match',
+            'route' => 'job-match',
+            'icon' => 'sparkles',
+            'active' => 'job-match',
+        ],
+        [
             'label' => 'Profile',
             'route' => 'dashboard.profile',
             'icon' => 'user',
