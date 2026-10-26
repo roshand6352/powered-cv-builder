@@ -19,8 +19,8 @@
 <body class="cover-letter-builder-page bg-cream font-sans antialiased text-body" style="font-family:'DM Sans',sans-serif">
     <div x-data="coverLetterBuilder(@js($builder))" class="flex h-screen flex-col">
         {{-- Toolbar --}}
-        <header class="flex shrink-0 items-center justify-between gap-4 border-b border-line bg-white px-4 py-3 sm:px-6">
-            <div class="flex min-w-0 items-center gap-3">
+        <header class="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line bg-white px-4 py-3 sm:px-6">
+            <div class="flex min-w-0 flex-1 items-center gap-3">
                 <a href="{{ route('dashboard.cover-letters') }}" class="inline-flex shrink-0 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-muted hover:bg-cream">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -32,11 +32,11 @@
                     type="text"
                     x-model="title"
                     @input="onInput()"
-                    class="min-w-0 max-w-xs truncate rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-navy hover:border-line focus:border-brand-400 focus:bg-white focus:outline-none"
+                    class="min-w-0 max-w-[10rem] truncate rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-navy hover:border-line focus:border-brand-400 focus:bg-white focus:outline-none sm:max-w-xs"
                 />
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2">
                 <span class="hidden text-xs text-muted sm:inline" x-text="saveStatus === 'saving' ? 'Saving…' : (saveStatus === 'saved' ? 'Saved' : (saveStatus === 'error' ? 'Save failed' : ''))"></span>
 
                 <button
@@ -45,10 +45,11 @@
                     :disabled="pdfStatus === 'loading'"
                     class="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium text-navy transition hover:bg-cream disabled:opacity-60"
                 >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12M12 16.5V3" />
                     </svg>
-                    <span x-text="pdfStatus === 'loading' ? 'Preparing…' : 'Download PDF'"></span>
+                    <span class="hidden sm:inline" x-text="pdfStatus === 'loading' ? 'Preparing…' : 'Download PDF'"></span>
+                    <span class="sm:hidden" x-text="pdfStatus === 'loading' ? '…' : 'PDF'"></span>
                 </button>
 
                 <button
@@ -80,8 +81,8 @@
                         class="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-brand-400 focus:outline-none"
                     ></textarea>
 
-                    <div class="mt-3 flex items-center gap-2">
-                        <select x-model="tone" class="rounded-lg border border-line px-2 py-2 text-xs focus:border-brand-400 focus:outline-none">
+                    <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <select x-model="tone" class="w-full rounded-lg border border-line px-2 py-2 text-xs focus:border-brand-400 focus:outline-none sm:w-auto">
                             <option value="professional">Professional</option>
                             <option value="enthusiastic">Enthusiastic</option>
                             <option value="formal">Formal</option>
@@ -91,7 +92,7 @@
                             type="button"
                             @click="generateWithAi()"
                             :disabled="aiLoading"
-                            class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-60"
+                            class="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-lg bg-navy px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
                             <svg x-show="!aiLoading" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -109,9 +110,9 @@
                 {{-- CV source --}}
                 <template x-if="cv">
                     <div x-data="{ open: false }" class="mt-4 rounded-2xl border border-line bg-cream/40 p-4">
-                        <button type="button" @click="open = !open" class="flex w-full items-center justify-between text-left">
-                            <span class="text-sm font-bold text-navy">Linked CV: <span x-text="cv.cv_title"></span></span>
-                            <svg class="h-4 w-4 text-muted transition" :class="open && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <button type="button" @click="open = !open" class="flex w-full min-w-0 items-center justify-between gap-2 text-left">
+                            <span class="min-w-0 truncate text-sm font-bold text-navy">Linked CV: <span x-text="cv.cv_title"></span></span>
+                            <svg class="h-4 w-4 shrink-0 text-muted transition" :class="open && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                             </svg>
                         </button>

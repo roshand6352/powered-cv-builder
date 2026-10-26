@@ -222,7 +222,7 @@ footer{background:var(--navy-dark);padding:64px 0 32px}
     .nav-links,.nav-actions{display:none}
     .nav-toggle{display:block}
     .hero-grid,.tools-grid,.footer-top{grid-template-columns:1fr}
-    .pricing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .pricing-grid{grid-template-columns:1fr}
     .hero{min-height:auto;padding:64px 0}
     .hero-visual{display:none}
     .pain-cards,.steps-grid,.testi-grid{grid-template-columns:1fr}
@@ -235,7 +235,9 @@ footer{background:var(--navy-dark);padding:64px 0 32px}
     .hero-ctas,.cta-btns{flex-direction:column;width:100%}
     .hero-ctas .btn,.cta-btns .btn{width:100%}
     .stats-grid{grid-template-columns:1fr}
-    .contact-grid,.plan-grid,.pricing-grid{grid-template-columns:1fr}
+    .contact-grid,.plan-grid{grid-template-columns:1fr}
+    .auth-wrap{padding:32px 16px}
+    .auth-card{padding:28px 20px}
 }
 
 /* Inner pages */

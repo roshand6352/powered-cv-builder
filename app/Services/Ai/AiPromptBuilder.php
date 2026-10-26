@@ -23,6 +23,95 @@ class AiPromptBuilder extends BaseService
     }
 
     /**
+     * @param  array<string, mixed>  $payload
+     * @return list<array{role: string, content: string}>
+     */
+    public function buildJobMatch(array $payload): array
+    {
+        $lines = [
+            'Compare the candidate profile against the job description and return JSON only.',
+            '',
+            'Required JSON shape:',
+            '{',
+            '  "score": 0,',
+            '  "matched_keywords": [],',
+            '  "missing_keywords": [],',
+            '  "strengths": [],',
+            '  "improvements": [],',
+            '  "summary": ""',
+            '}',
+            '',
+            'Job Description:',
+            (string) ($payload['job_description'] ?? ''),
+            '',
+            'Selected CV JSON:',
+            json_encode($payload['cv_json'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}',
+        ];
+
+        if (! empty($payload['cover_letter'])) {
+            $lines[] = '';
+            $lines[] = 'Selected Cover Letter:';
+            $lines[] = json_encode($payload['cover_letter'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
+        }
+
+        return [
+            $this->systemMessage('Return valid JSON only.'),
+            $this->userMessage(implode("\n", $lines)),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return list<array{role: string, content: string}>
+     */
+    public function buildLinkedinPdfImport(array $payload): array
+    {
+        $cvSchema = [
+            'json_data' => [
+                'schema_version' => config('cv.schema_version'),
+                'template' => config('cv.schema.template'),
+                'personal_details' => config('cv.schema.personal_details'),
+                'experience' => [config('cv.schema.experience')],
+                'education' => [config('cv.schema.education')],
+                'skills' => [config('cv.schema.skills')],
+                'languages' => [config('cv.schema.languages')],
+                'projects' => [config('cv.schema.projects')],
+                'certifications' => [config('cv.schema.certifications')],
+                'references' => [],
+                'custom_sections' => [],
+                'meta' => config('cv.defaults.meta'),
+            ],
+        ];
+
+        $lines = [
+            'Read the LinkedIn profile PDF text and extract only the information you can confidently identify.',
+            'Return valid JSON only. Do not include markdown, notes, or explanations.',
+            'Match the CV builder JSON structure exactly.',
+            'Use empty strings or empty arrays when the LinkedIn PDF does not contain a value.',
+            'Do not invent references, custom sections, profile photos, URLs, or dates that are not supported by the source text.',
+            'Map the LinkedIn summary/about content into personal_details.summary.',
+            'Map contact details into personal_details fields when available: email, phone, location, website, linkedin.',
+            'Each experience item must use: company, position, location, start_date, end_date, current, description.',
+            'Each education item must use: institution, degree, field, start_date, end_date, in_progress, description.',
+            'Each skill item must use: name, level.',
+            'Each language item must use: name, proficiency.',
+            'Each project item must use: name, url, start_date, end_date, in_progress, description.',
+            'Each certification item must use: name, issuer, date, url.',
+            '',
+            'Required JSON shape:',
+            json_encode($cvSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}',
+            '',
+            'LinkedIn PDF text:',
+            (string) ($payload['extracted_text'] ?? ''),
+        ];
+
+        return [
+            $this->systemMessage('Return valid JSON only.'),
+            $this->userMessage(implode("\n", $lines)),
+        ];
+    }
+
+    /**
      * @return list<array{role: string, content: string}>
      */
     protected function generateSummary(array $payload): array

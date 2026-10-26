@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -58,6 +59,11 @@ class CoverLetter extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(CvTemplate::class, 'template_id');
+    }
+
+    public function jobMatchScores(): HasMany
+    {
+        return $this->hasMany(JobMatchScore::class);
     }
 
     public function pdfExports(): MorphMany
