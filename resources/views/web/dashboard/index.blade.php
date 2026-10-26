@@ -11,6 +11,7 @@
         <x-dashboard.stat-card
             label="Total CVs"
             :value="$stats['total_cvs']"
+            :route="route('dashboard.cvs')"
             hint="Resumes in your account"
             icon="document"
             color="brand"
@@ -19,6 +20,7 @@
         <x-dashboard.stat-card
             label="Cover Letters"
             :value="$stats['cover_letters']"
+            :route="route('dashboard.cover-letters')"
             hint="Letters you've created"
             icon="mail"
             color="navy"
