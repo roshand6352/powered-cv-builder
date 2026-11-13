@@ -9,6 +9,7 @@ use App\Http\Requests\Pdf\QueueCvPdfExportRequest;
 use App\Models\CoverLetter;
 use App\Models\Cv;
 use App\Models\PdfExport;
+use App\Models\User;
 use App\Services\Pdf\CoverLetterPdfGenerator;
 use App\Services\Pdf\CvPdfExportService;
 use App\Services\Pdf\CvPdfGenerator;
@@ -17,6 +18,7 @@ use App\Services\Pdf\PdfExportService;
 use App\Support\Pdf\PdfOutputGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,7 +48,9 @@ class PdfExportController extends Controller
 
         try {
             $pdf = $this->cvPdfExportService->generate($cv, $user, $validated);
-            $filename = $this->cvPdfExportService->filename($cv);
+            $filename = $this->cvPdfExportService->filename($cv, $validated['json_data'] ?? null);
+
+            $this->saveToDocumentLibrary($user, $cv, $filename, $pdf);
 
             return PdfOutputGuard::downloadResponse($pdf, $filename);
         } catch (Throwable $exception) {
@@ -105,7 +109,7 @@ class PdfExportController extends Controller
         }
     }
 
-    public function downloadCoverLetter(CoverLetter $coverLetter): Response
+    public function downloadCoverLetter(Request $request, CoverLetter $coverLetter): Response
     {
         $this->authorize('view', $coverLetter);
 
@@ -124,12 +128,65 @@ class PdfExportController extends Controller
                 $this->coverLetterPdfGenerator->buildOptions($coverLetter, $user, $applyWatermark),
             );
 
-            $filename = Str::slug($coverLetter->title ?: 'cover-letter').'.pdf';
+            $filename = (Str::slug($coverLetter->title ?: 'cover-letter') ?: 'cover-letter').'.pdf';
+
+            $this->saveToDocumentLibrary($request->user(), $coverLetter, $filename, $pdf);
 
             return PdfOutputGuard::downloadResponse($pdf, $filename);
         } catch (Throwable $exception) {
-            return $this->pdfExportErrorResponse($exception);
+            return $this->coverLetterPdfFailureResponse($request, $coverLetter, $exception);
         }
+    }
+
+    /**
+     * A library write failure must never block the download the user asked for.
+     */
+    protected function saveToDocumentLibrary(User $user, Cv|CoverLetter $document, string $filename, string $pdf): void
+    {
+        try {
+            $this->pdfExportService->recordDownload($user, $document, $filename, $pdf);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    /**
+     * Log the technical failure server side and return a friendly, non-technical
+     * response. AJAX callers get JSON they can show with a Retry button; plain form
+     * posts are redirected back to the page they came from with a flash message.
+     */
+    protected function coverLetterPdfFailureResponse(Request $request, CoverLetter $coverLetter, Throwable $exception): Response
+    {
+        $reference = Str::upper(Str::random(10));
+
+        Log::error('Cover letter PDF generation failed.', [
+            'reference' => $reference,
+            'cover_letter_id' => $coverLetter->id,
+            'user_id' => $request->user()?->id,
+            'pdf_engine' => config('pdf.hosts'),
+            'exception' => $exception::class,
+            'message' => $exception->getMessage(),
+            'file' => $exception->getFile().':'.$exception->getLine(),
+            'trace' => Str::limit($exception->getTraceAsString(), 4000),
+        ]);
+
+        $message = "We couldn't generate your PDF right now. Your cover letter is safe - please try again.";
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => $message,
+                'reference' => $reference,
+                'retryable' => true,
+            ], 500);
+        }
+
+        return redirect()
+            ->back(fallback: route('dashboard.cover-letters'))
+            ->with('cover_letter_pdf_error', [
+                'message' => $message,
+                'reference' => $reference,
+                'slug' => $coverLetter->slug,
+            ]);
     }
 
     public function show(PdfExport $pdfExport): JsonResponse

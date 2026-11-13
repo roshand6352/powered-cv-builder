@@ -172,8 +172,6 @@ class CvPreviewHtmlPdfPreparer extends BaseService
             $exportCss = PdfPaginationStyles::css().<<<'CSS'
 
 .cv-rich-text { white-space: normal !important; }
-.cv-rich-text p { margin: .35rem 0 0 !important; }
-.cv-rich-text ul, .cv-rich-text ol { margin: .35rem 0 0 !important; padding-left: 1.25rem !important; }
 CSS;
 
             $styleTag = '<style id="cv-pdf-export-styles">'.$exportCss.'</style>';

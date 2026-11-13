@@ -21,6 +21,7 @@ class PdfExportService extends BaseService
         protected CvPdfGenerator $cvPdfGenerator,
         protected CoverLetterPdfGenerator $coverLetterPdfGenerator,
         protected PdfGenerationService $pdfGenerationService,
+        protected CvPdfExportService $cvPdfExportService,
     ) {}
 
     public function queueCvExport(Cv $cv, User $user, ?string $templateKey = null): PdfExport
@@ -29,7 +30,7 @@ class PdfExportService extends BaseService
             user: $user,
             exportable: $cv,
             type: PdfExportType::Cv,
-            filename: $this->buildFilename($cv->title, 'cv'),
+            filename: $this->cvPdfExportService->filename($cv),
             options: array_filter(['template' => $templateKey]),
         );
 
@@ -123,6 +124,50 @@ class PdfExportService extends BaseService
     }
 
     /**
+     * Save a directly downloaded PDF to the user's Document Library so it can be
+     * downloaded again later. Keeps one entry per document, holding its latest PDF.
+     */
+    public function recordDownload(User $user, Cv|CoverLetter $exportable, string $filename, string $binary): PdfExport
+    {
+        PdfOutputGuard::assertValidPdf($binary);
+
+        $export = PdfExport::query()
+            ->where('user_id', $user->id)
+            ->where('exportable_type', $exportable::class)
+            ->where('exportable_id', $exportable->id)
+            ->where('status', PdfExportStatus::Completed)
+            ->latest('id')
+            ->first();
+
+        $previousDisk = $export?->disk;
+        $previousPath = $export?->path;
+
+        $export ??= $this->createExport(
+            user: $user,
+            exportable: $exportable,
+            type: $exportable instanceof Cv ? PdfExportType::Cv : PdfExportType::CoverLetter,
+            filename: $filename,
+        );
+
+        $export->filename = $filename;
+        $path = $this->storePdf($export, $binary);
+
+        $export->forceFill([
+            'status' => PdfExportStatus::Completed,
+            'path' => $path,
+            'file_size' => strlen($binary),
+            'completed_at' => now(),
+            'error_message' => null,
+        ])->save();
+
+        if ($previousPath && ($previousPath !== $path || $previousDisk !== $export->disk)) {
+            Storage::disk($previousDisk)->delete($previousPath);
+        }
+
+        return $export;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Collection<int, PdfExport>
      */
     public function historyForUser(User $user, int $limit = 25)
@@ -130,7 +175,8 @@ class PdfExportService extends BaseService
         return PdfExport::query()
             ->where('user_id', $user->id)
             ->with('exportable')
-            ->latest()
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
             ->limit($limit)
             ->get();
     }

@@ -30,6 +30,7 @@ Route::get('/pricing', [MarketingController::class, 'pricing'])->name('pricing')
 Route::get('/contact', [MarketingController::class, 'contact'])->name('contact');
 Route::get('/about', [MarketingController::class, 'about'])->name('about');
 Route::get('/privacy-policy', [MarketingController::class, 'privacy'])->name('privacy');
+Route::get('/popia-notice', [MarketingController::class, 'popia'])->name('popia');
 Route::get('/terms', [MarketingController::class, 'terms'])->name('terms');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
@@ -85,6 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cover-letter-templates/{cvTemplate:slug}/preview', [CoverLetterController::class, 'preview'])->name('cover-letter-templates.preview');
 
     // Cover Letters — always linked to a specific CV.
+    Route::get('/cover-letters/cv-options', [CoverLetterController::class, 'cvOptions'])->name('cover-letters.cv-options');
     Route::get('/cvs/{cv}/cover-letters/create', [CoverLetterController::class, 'create'])->name('cvs.cover-letters.create');
     Route::post('/cvs/{cv}/cover-letters', [CoverLetterController::class, 'store'])->name('cvs.cover-letters.store');
 

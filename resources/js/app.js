@@ -7,6 +7,7 @@ import { registerCvTemplatePicker } from './cv/template-picker';
 import { registerCvLivePreview } from './cv/live-preview';
 import { registerLinkedinPdfImportModal } from './cv/linkedin-pdf-import-modal';
 import { registerCoverLetterBuilder } from './cover-letter/builder';
+import { registerCoverLetterListing } from './cover-letter/listing';
 import { registerRichTextEditor } from './shared/rich-text-editor';
 import { registerCheckoutCoupon } from './subscription/checkout-coupon';
 
@@ -19,6 +20,7 @@ registerCvTemplatePicker();
 registerCvLivePreview();
 registerLinkedinPdfImportModal();
 registerCoverLetterBuilder();
+registerCoverLetterListing();
 registerCheckoutCoupon();
 
 Alpine.start();

@@ -20,6 +20,22 @@ return [
 
     'queue' => env('AI_QUEUE', 'default'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | LinkedIn PDF import
+    |--------------------------------------------------------------------------
+    |
+    | A complete CV as JSON needs far more output tokens than the default chat
+    | limit, so the import uses its own, larger budget and a low temperature to
+    | keep the structured output stable.
+    |
+    */
+    'linkedin_import' => [
+        'max_tokens' => (int) env('LINKEDIN_IMPORT_MAX_TOKENS', 8000),
+        'temperature' => (float) env('LINKEDIN_IMPORT_TEMPERATURE', 0.2),
+        'timeout' => (int) env('LINKEDIN_IMPORT_AI_TIMEOUT', 120),
+    ],
+
     'default_credits_limit' => (int) env('AI_DEFAULT_CREDITS_LIMIT', 10),
 
     'openai' => [
@@ -61,7 +77,7 @@ return [
         ],
 
         'improve_experience' => [
-            'instruction' => 'Improve the experience description using strong action verbs and concise professional language. Keep every fact truthful and grounded in the current description — do not invent employers, dates, locations, or metrics.',
+            'instruction' => 'Improve the wording, grammar, clarity, and professionalism of the work experience description below. The description is the only input: the job title, company, location, and dates are shown in separate fields, so never repeat, add, or mention them. Keep every fact truthful and grounded in the text provided; do not invent responsibilities, metrics, employers, dates, tools, or achievements. Keep the existing structure: if the text is a list, return a list with one item per line, each starting with "- "; otherwise return short paragraphs, one per line. Do not use bold, headings, or other Markdown formatting, and do not add a title or introduction. Return only the improved description.',
         ],
 
         'improve_skills' => [

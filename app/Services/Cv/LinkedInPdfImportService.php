@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -17,6 +18,12 @@ class LinkedInPdfImportService extends BaseService
     public const STATUS_TTL_MINUTES = 60;
 
     public const STATUS_CACHE_PREFIX = 'linkedin_pdf_import.status.';
+
+    /** Seconds a queued import may wait for a queue worker before it is reported as failed. */
+    public const WORKER_PICKUP_TIMEOUT_SECONDS = 20;
+
+    /** Seconds a running import may go without any progress update before it is reported as failed. */
+    public const PROGRESS_STALL_TIMEOUT_SECONDS = 150;
 
     public function __construct(
         protected CvService $cvService,
@@ -55,6 +62,8 @@ class LinkedInPdfImportService extends BaseService
      */
     public function putStatusForUserId(int $userId, array $payload): void
     {
+        $payload['updated_at'] = now()->timestamp;
+
         Cache::put(
             $this->statusCacheKey($userId),
             $payload,
@@ -72,20 +81,88 @@ class LinkedInPdfImportService extends BaseService
             Str::uuid()->toString().'.'.$pdf->getClientOriginalExtension(),
         );
 
+        $importId = Str::uuid()->toString();
+
         $this->putStatus($user, [
             'state' => 'processing',
             'step' => 'uploading_pdf',
             'message' => null,
             'uploaded_pdf_path' => $temporaryPath,
             'mapped_cv_json' => null,
+            'import_id' => $importId,
         ]);
 
         ImportLinkedInPdfJob::dispatch(
             user_id: (int) $user->id,
             uploaded_pdf_path: $temporaryPath,
+            import_id: $importId,
         );
 
         return $temporaryPath;
+    }
+
+    /**
+     * True while this import run is still the active, in-progress import for the user.
+     * A job that finds it was cancelled, replaced, or already failed must not run.
+     */
+    public function isActiveImport(User $user, ?string $importId): bool
+    {
+        $status = $this->statusFor($user);
+
+        if (($status['state'] ?? null) !== 'processing') {
+            return false;
+        }
+
+        return $importId === null || ($status['import_id'] ?? null) === $importId;
+    }
+
+    /**
+     * Turn an import that can no longer make progress (no queue worker picked it
+     * up, or the worker died mid-run) into an explicit failure instead of
+     * leaving the modal spinning on the same step.
+     *
+     * @param  array<string, mixed>  $status
+     * @return array<string, mixed>
+     */
+    protected function failIfStalled(User $user, array $status): array
+    {
+        if (($status['state'] ?? null) !== 'processing') {
+            return $status;
+        }
+
+        $idleSeconds = now()->timestamp - (int) ($status['updated_at'] ?? now()->timestamp);
+        $waitingForWorker = ($status['step'] ?? null) === 'uploading_pdf';
+        $limit = $waitingForWorker
+            ? self::WORKER_PICKUP_TIMEOUT_SECONDS
+            : self::PROGRESS_STALL_TIMEOUT_SECONDS;
+
+        if ($idleSeconds < $limit) {
+            return $status;
+        }
+
+        Log::error('LinkedIn PDF import stalled', [
+            'user_id' => $user->id,
+            'step' => $status['step'] ?? null,
+            'idle_seconds' => $idleSeconds,
+            'hint' => $waitingForWorker
+                ? 'No queue worker picked up ImportLinkedInPdfJob. Start one with `php artisan queue:work` (or `composer dev`).'
+                : 'The queue worker stopped reporting progress; check the worker and the log for a fatal error.',
+        ]);
+
+        $this->deleteTemporaryPdf((string) ($status['uploaded_pdf_path'] ?? ''));
+
+        $failed = array_merge($status, [
+            'state' => 'failed',
+            'message' => $waitingForWorker
+                ? 'The import could not start because our background processor is not running. Please try again in a moment or enter your CV manually.'
+                : 'The import stopped responding. Please try again or enter your CV manually.',
+            'uploaded_pdf_path' => null,
+            'mapped_cv_json' => null,
+        ]);
+
+        $this->putStatus($user, $failed);
+
+        return $failed;
     }
 
     /**
@@ -102,6 +179,8 @@ class LinkedInPdfImportService extends BaseService
         if ($status === null) {
             return null;
         }
+
+        $status = $this->failIfStalled($user, $status);
 
         if (($status['state'] ?? null) === 'ready_for_builder') {
             return null;
@@ -145,6 +224,8 @@ class LinkedInPdfImportService extends BaseService
         if ($status === null) {
             return null;
         }
+
+        $status = $this->failIfStalled($user, $status);
 
         if (($status['state'] ?? null) === 'ready_for_builder') {
             return null;

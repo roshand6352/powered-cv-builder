@@ -36,12 +36,17 @@
             <h3 class="text-lg font-semibold text-navy">{{ $plan->name }}</h3>
             <p class="mt-1 text-sm text-muted">{{ $plan->description }}</p>
 
+            @php($dailyPrice = $plan->formattedDailyPrice())
+
             <div class="mt-4 flex items-baseline gap-1">
                 <span class="text-3xl font-bold text-navy">{{ $plan->formattedPrice() }}</span>
-                @if (! $plan->isFree() && ! $plan->isLifetime())
-                    <span class="text-sm text-muted">/ {{ $plan->periodLabel() }}</span>
+                @if ($suffix = $plan->displayPriceSuffix())
+                    <span class="text-sm text-muted">{{ $suffix }}</span>
                 @endif
             </div>
+            @if ($dailyPrice && $plan->durationInDays() > 1)
+                <p class="mt-1 text-xs text-muted">About {{ $dailyPrice }} / day</p>
+            @endif
 
             <ul class="mt-6 flex-1 space-y-2">
                 @foreach ($plan->displayFeatures() as $feature)

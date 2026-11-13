@@ -19,6 +19,7 @@ class DompdfPdfService extends BaseService implements PdfEngineInterface
 {
     public function __construct(
         protected DompdfHtmlPreparer $htmlPreparer,
+        protected PdfFontLoader $fontLoader,
     ) {}
 
     public function name(): string
@@ -40,6 +41,11 @@ class DompdfPdfService extends BaseService implements PdfEngineInterface
             $dompdf->set_option('isFontSubsettingEnabled', true);
             $dompdf->set_option('defaultFont', config('dompdf.default_font', 'DejaVu Sans'));
             $dompdf->set_option('chroot', config('dompdf.chroot', base_path()));
+
+            if (str_contains($preparedHtml, 'id="cv-pdf-fonts"')
+                && ($fontHeightRatio = $this->fontLoader->dompdfFontHeightRatio($preparedHtml)) !== null) {
+                $dompdf->getOptions()->setFontHeightRatio($fontHeightRatio);
+            }
 
             if ($options->fromLivePreview) {
                 // Builder preview dimensions (A4 at 96 DPI) — same as BrowsershotEngine.

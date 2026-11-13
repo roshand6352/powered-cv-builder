@@ -1,5 +1,6 @@
 @php
     $stats = config('marketing.stats', []);
+    $reviewsUrl = config('marketing.reviews.url');
     $buildUrl = auth()->check() ? route('dashboard.cvs') : route('register');
 @endphp
 
@@ -18,7 +19,11 @@
                     <a href="#how" class="btn btn-outline-lg" style="color:white;border-color:rgba(255,255,255,0.3)">See how it works</a>
                 </div>
                 <div class="hero-trust">
-                    <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    @if (filled($reviewsUrl))
+                        <a href="{{ $reviewsUrl }}" class="stars" target="_blank" rel="noopener noreferrer" aria-label="Rated five stars - read our reviews (opens in a new tab)" style="text-decoration:none">&#9733;&#9733;&#9733;&#9733;&#9733;</a>
+                    @else
+                        <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    @endif
                     <span class="hero-trust-text">Trusted by <b>{{ $stats['trusted_users'] ?? '10,000' }}+</b> South Africans &nbsp;&middot;&nbsp; No card required</span>
                 </div>
             </div>

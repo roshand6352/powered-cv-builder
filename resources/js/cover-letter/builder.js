@@ -3,6 +3,8 @@ import Alpine from 'alpinejs';
 import { prepareEditorHtml } from '../shared/rich-text-sanitize';
 import { openAiUpgradeModal } from '../shared/ai-upgrade';
 import { applyCoverLetterPreviewPatch } from './preview-patcher';
+import { downloadCoverLetterPdf } from './pdf-download';
+import { cvPdfReadySheet } from '../cv/pdf-download';
 
 const CONTENT_FIELDS = [
     'company_name',
@@ -39,6 +41,7 @@ export function registerCoverLetterBuilder() {
         aiError: null,
         pdfStatus: 'idle',
         pdfError: null,
+        ...cvPdfReadySheet(),
 
         previewTimer: null,
         autosaveTimer: null,
@@ -453,28 +456,42 @@ export function registerCoverLetterBuilder() {
             this.pdfStatus = 'loading';
             this.pdfError = null;
 
+            // Persist current state so the exported PDF matches the preview. The
+            // editor content is never cleared, whatever happens below.
+            clearTimeout(this.autosaveTimer);
+
             try {
-                // Persist current state so the exported PDF matches the preview.
                 await axios.put(this.urls.save, { ...this.collectFields(), template: this.template });
                 this.isDirty = false;
+                this.saveStatus = 'saved';
+            } catch (error) {
+                const errors = error.response?.data?.errors ?? {};
+                const first = Object.values(errors).flat().find((message) => typeof message === 'string');
+                this.pdfStatus = 'error';
+                this.pdfError = first
+                    ? `Please fix this before downloading: ${first}`
+                    : "We couldn't save your latest changes before downloading. Please try again.";
 
-                const response = await axios.post(this.urls.pdfDownload, {}, { responseType: 'blob' });
+                return;
+            }
 
-                const blob = new Blob([response.data], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${slugify(this.title) || 'cover-letter'}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
-
+            try {
+                const result = await downloadCoverLetterPdf(this.urls.pdfDownload, `${slugify(this.title) || 'cover-letter'}.pdf`);
                 this.pdfStatus = 'idle';
+
+                if (result.needsUserAction) {
+                    this.showPdfReady(result.file);
+                }
             } catch (error) {
                 this.pdfStatus = 'error';
-                this.pdfError = error.response?.data?.message ?? 'PDF download failed.';
+                this.pdfError = error.message;
             }
+        },
+
+        retryPdf() {
+            this.pdfStatus = 'idle';
+            this.pdfError = null;
+            this.downloadPdf();
         },
     }));
 }

@@ -4,6 +4,7 @@ namespace App\Services\Pdf;
 
 use App\Services\BaseService;
 use App\Support\Pdf\DompdfIconFallback;
+use App\Support\Pdf\DompdfLayoutTransformer;
 use App\Support\Pdf\PdfTemplateContext;
 
 /**
@@ -27,11 +28,20 @@ class DompdfHtmlNormalizer extends BaseService
 
         $context = PdfTemplateContext::fromHtml($html);
         $variables = $context['vars'];
+        $isCv = PdfTemplateContext::isCvDocument($html);
 
         $html = $this->stripConflictingExportStyles($html);
         $html = $this->cssResolver->normalizeHtml($html, $variables);
-        $html = $this->fontLoader->injectFontFaces($html);
-        $html = DompdfIconFallback::replaceWithSpacers($html);
+
+        if ($isCv) {
+            $html = $this->fontLoader->injectFontFaces($html);
+            $html = DompdfIconFallback::replaceWithImages($html, $variables);
+            $html = DompdfLayoutTransformer::apply($html);
+            $html = $this->injectPageFlowStyles($html, $variables);
+        } else {
+            $html = DompdfIconFallback::replaceWithSpacers($html);
+        }
+
         $html = $this->markNormalized($html);
 
         return $html;
@@ -48,6 +58,22 @@ class DompdfHtmlNormalizer extends BaseService
             '',
             $html,
         ) ?? $html;
+    }
+
+    /**
+     * Added after CSS resolution, which rewrites position:fixed (needed for the repeating sidebar colour).
+     *
+     * @param  array<string, string>  $variables
+     */
+    protected function injectPageFlowStyles(string $html, array $variables): string
+    {
+        $styleTag = view('web.pdf.dompdf.page-flow', ['vars' => $variables])->render();
+
+        if (preg_match('/<\/head>/i', $html) === 1) {
+            return preg_replace('/<\/head>/i', $styleTag.'</head>', $html, 1) ?? $html;
+        }
+
+        return $styleTag.$html;
     }
 
     protected function markNormalized(string $html): string

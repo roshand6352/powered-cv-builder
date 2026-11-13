@@ -171,6 +171,19 @@ export const PREVIEW_CSS = `
     .cv-layout-corporate .cv-aside .cv-tag { background: rgba(255,255,255,.14); color: #fff; }
     .cv-layout-corporate .cv-aside .cv-section-icon,
     .cv-layout-corporate .cv-aside .cv-contact-icon { color: var(--cv-secondary); }
+    /* Dark sidebar: keep the name, contact details, headings and languages high-contrast (preview + PDF). */
+    .cv-layout-corporate .cv-aside .cv-header-name,
+    .cv-layout-professional .cv-aside .cv-header-name { color: #ffffff; }
+    .cv-layout-corporate .cv-aside .cv-header-contact,
+    .cv-layout-corporate .cv-aside .cv-header-contact a,
+    .cv-layout-professional .cv-aside .cv-header-contact,
+    .cv-layout-professional .cv-aside .cv-header-contact a { color: rgba(248,250,252,.92); }
+    .cv-layout-professional .cv-aside { color: #f8fafc; }
+    .cv-layout-professional .cv-aside .cv-section-title,
+    .cv-layout-professional .cv-aside .cv-section-title-text,
+    .cv-layout-professional .cv-aside .cv-item-title,
+    .cv-layout-professional .cv-aside .cv-list-row,
+    .cv-layout-professional .cv-aside .cv-group-title { color: #f8fafc; }
     .cv-layout-creative .cv-header { border-left: 6px solid var(--cv-accent); padding-left: 1rem; }
     .cv-layout-creative .cv-tag { border-radius: var(--cv-border-radius, 4px); }
     .cv-layout-premium .cv-header { border-top: 4px solid var(--cv-secondary); padding-top: 1.35rem; }

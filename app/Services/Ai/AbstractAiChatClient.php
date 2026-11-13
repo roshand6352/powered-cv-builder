@@ -54,7 +54,7 @@ abstract class AbstractAiChatClient extends BaseService implements AiClientInter
                 ->withToken((string) $apiKey)
                 ->withHeaders($this->extraHeaders())
                 ->acceptJson()
-                ->timeout((int) ($config['timeout'] ?? 60))
+                ->timeout((int) ($options['timeout'] ?? ($config['timeout'] ?? 60)))
                 ->post('/chat/completions', $payload)
                 ->throw();
         } catch (RequestException $exception) {

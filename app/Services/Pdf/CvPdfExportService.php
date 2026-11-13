@@ -66,8 +66,33 @@ class CvPdfExportService extends BaseService
         );
     }
 
-    public function filename(Cv $cv): string
+    /**
+     * Download filename such as "Shane-Louw-CV.pdf" (ASCII-safe) from the candidate's
+     * full name in the submitted document, otherwise the saved CV. Falls back to "My-CV.pdf".
+     * Mirrors buildCvPdfFilename() in resources/js/cv/pdf-download.js.
+     *
+     * @param  array<string, mixed>|string|null  $document
+     */
+    public function filename(Cv $cv, array|string|null $document = null): string
     {
-        return Str::slug($cv->title ?: 'cv').'.pdf';
+        if (is_string($document)) {
+            $document = json_decode($document, true);
+        }
+
+        $fullName = data_get(is_array($document) ? $document : [], 'personal_details.full_name')
+            ?: data_get($cv->cv_data ?? [], 'personal_details.full_name');
+
+        $base = $this->filenameSegment(is_string($fullName) ? $fullName : '');
+
+        return $base !== '' ? $base.'-CV.pdf' : 'My-CV.pdf';
+    }
+
+    protected function filenameSegment(string $value): string
+    {
+        $ascii = Str::ascii($value);
+        $words = preg_split('/[^A-Za-z0-9]+/', $ascii, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $words = array_filter($words, fn (string $word) => strcasecmp($word, 'cv') !== 0);
+
+        return rtrim(Str::limit(implode('-', array_map(fn (string $word) => ucfirst($word), $words)), 80, ''), '-');
     }
 }

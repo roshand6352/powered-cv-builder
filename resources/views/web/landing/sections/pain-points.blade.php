@@ -5,7 +5,7 @@
         <div class="pain-intro">
             <span class="section-tag">The Problem</span>
             <h2 class="section-title">Give yourself a real opportunity to compete in the South African job market</h2>
-            <p class="section-sub">When there are limited jobs and many strong applicants, a competitive edge is necessary if you want to be short-listed and interviewed. And it all begins with your CV.</p>
+            <p class="section-sub">When there are limited jobs and many strong applicants, a competitive edge is necessary if you want to be shortlisted and interviewed. And it all begins with your CV.</p>
         </div>
         <h3 style="font-size:20px;font-weight:700;margin-bottom:28px;color:var(--navy)">How ApplyDocs ZA can help you get hired</h3>
         <div class="pain-cards">

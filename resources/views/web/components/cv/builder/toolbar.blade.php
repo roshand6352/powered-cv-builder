@@ -16,7 +16,11 @@
             <input
                 type="text"
                 x-model="title"
-                @input="markDirty()"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="sentences"
+                spellcheck="false"
+                enterkeyhint="done"
                 class="min-w-0 flex-1 rounded-lg border-slate-300 text-sm font-semibold shadow-sm focus:border-brand-500 focus:ring-brand-500 sm:max-w-xs"
                 placeholder="CV title"
             >

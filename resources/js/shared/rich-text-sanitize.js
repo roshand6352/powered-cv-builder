@@ -68,3 +68,71 @@ export function richTextToPlainText(html) {
 
     return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
+
+/**
+ * Like richTextToPlainText, but keeps paragraph / line breaks and renders list
+ * items as "- item" (or "1. item") lines so the structure survives a round trip
+ * through the AI.
+ */
+export function richTextToStructuredText(html) {
+    const prepared = prepareEditorHtml(html);
+
+    if (! prepared) {
+        return '';
+    }
+
+    const doc = new DOMParser().parseFromString(prepared, 'text/html');
+    const lines = [];
+    const clean = (node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+    const walk = (parent) => {
+        parent.childNodes.forEach((node) => {
+            if (node.nodeType === 3) {
+                const text = clean(node);
+
+                if (text) {
+                    lines.push(text);
+                }
+
+                return;
+            }
+
+            if (node.nodeType !== 1) {
+                return;
+            }
+
+            const tag = node.tagName.toLowerCase();
+
+            if (tag === 'ul' || tag === 'ol') {
+                let count = 0;
+
+                node.querySelectorAll(':scope > li').forEach((li) => {
+                    count += 1;
+                    lines.push(`${tag === 'ol' ? `${count}.` : '-'} ${clean(li)}`);
+                });
+
+                return;
+            }
+
+            if (tag === 'br') {
+                return;
+            }
+
+            if (node.querySelector('ul, ol')) {
+                walk(node);
+
+                return;
+            }
+
+            const text = clean(node);
+
+            if (text) {
+                lines.push(text);
+            }
+        });
+    };
+
+    walk(doc.body);
+
+    return lines.join('\n');
+}
