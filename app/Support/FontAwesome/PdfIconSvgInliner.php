@@ -68,6 +68,19 @@ class PdfIconSvgInliner
     }
 
     /**
+     * Coloured SVG markup and role class (section / contact icon) for a Font Awesome class list.
+     *
+     * @return array{svg: string, role: string}|null
+     */
+    public static function iconFor(string $classAttr, string $color): ?array
+    {
+        $parsed = self::parseIconClasses($classAttr);
+        $svg = $parsed ? self::loadSvgMarkup($parsed['style'], $parsed['name'], $color) : null;
+
+        return $svg === null ? null : ['svg' => $svg, 'role' => self::resolveRoleClass($classAttr)];
+    }
+
+    /**
      * @return array{style: string, name: string}|null
      */
     protected static function parseIconClasses(string $classAttr): ?array

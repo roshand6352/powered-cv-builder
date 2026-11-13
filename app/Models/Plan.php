@@ -231,6 +231,67 @@ class Plan extends Model
         return trim($symbol.' '.number_format($price, 2));
     }
 
+    /**
+     * Plan validity in days, derived from the stored duration fields so it
+     * always reflects the plan's current details. Null for lifetime plans and
+     * plans without a usable duration.
+     */
+    public function durationInDays(): ?float
+    {
+        if ($this->isLifetime()) {
+            return null;
+        }
+
+        if ($this->duration_days) {
+            return (float) $this->duration_days;
+        }
+
+        if ($this->duration_hours) {
+            return $this->duration_hours / 24;
+        }
+
+        $value = (int) $this->duration_value;
+
+        if ($value > 0) {
+            return match ($this->duration_type) {
+                'day' => (float) $value,
+                'week' => (float) ($value * 7),
+                'month' => (float) ($value * 30),
+                'year' => (float) ($value * 365),
+                default => null,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Plan price divided by the plan's validity in days.
+     */
+    public function dailyPrice(): ?float
+    {
+        $days = $this->durationInDays();
+
+        if ($this->isFree() || $days === null || $days <= 0) {
+            return null;
+        }
+
+        return round((float) $this->price / $days, 2);
+    }
+
+    public function formattedDailyPrice(): ?string
+    {
+        $daily = $this->dailyPrice();
+
+        if ($daily === null) {
+            return null;
+        }
+
+        $symbol = $this->currency_symbol ?: ($this->currency === 'ZAR' ? 'R' : '$');
+
+        return trim($symbol.' '.number_format($daily, $daily === floor($daily) ? 0 : 2));
+    }
+
     public function displayPriceSuffix(): ?string
     {
         if (filled($this->price_suffix)) {

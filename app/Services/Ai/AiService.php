@@ -84,7 +84,16 @@ class AiService extends BaseService
         $messages = $this->promptBuilder->buildLinkedinPdfImport($payload);
         $completion = $this->aiClient->chat($messages, [
             'response_format' => ['type' => 'json_object'],
+            'max_tokens' => (int) config('ai.linkedin_import.max_tokens', 8000),
+            'temperature' => (float) config('ai.linkedin_import.temperature', 0.2),
+            'timeout' => (int) config('ai.linkedin_import.timeout', 120),
         ]);
+
+        // A reply that stopped because it hit the token limit is cut-off JSON.
+        // Report that precisely instead of failing later with "invalid JSON".
+        if (data_get($completion->raw, 'choices.0.finish_reason') === 'length') {
+            throw new \RuntimeException('AI response was truncated because the LinkedIn profile is too long.');
+        }
 
         $decoded = $this->responseParser->decodeJsonContent($completion->content);
 

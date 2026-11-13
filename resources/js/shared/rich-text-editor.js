@@ -78,8 +78,13 @@ export function createRichTextEditor(mountEl, options = {}) {
 }
 
 export function registerRichTextEditor() {
-    window.Alpine.data('richTextField', (config = {}) => ({
-        quill: null,
+    // The Quill instance lives in this closure, NOT on the Alpine data object: Alpine
+    // wraps data in a reactive Proxy, and a proxied Quill breaks its internal blot
+    // identity checks (lists lose their <ol> container and render malformed/blank).
+    window.Alpine.data('richTextField', (config = {}) => {
+    let quill = null;
+
+    return {
         syncing: false,
         minHeight: config.minHeight ?? '140px',
         _initialized: false,
@@ -104,24 +109,23 @@ export function registerRichTextEditor() {
                 destroyRichTextEditor(this._mountEl);
             }
 
-            this.quill = createRichTextEditor(this._mountEl, {
+            quill = createRichTextEditor(this._mountEl, {
                 placeholder: config.placeholder ?? '',
             });
 
             this._onTextChange = () => {
-                if (this.syncing || ! this.quill) {
+                if (this.syncing || ! quill) {
                     return;
                 }
 
-                const html = sanitizeRichText(this.quill.root.innerHTML);
-                setValue(html);
+                setValue(this.getEditorHtml());
                 this.$el.dispatchEvent(new Event('input', { bubbles: true }));
             };
 
-            this.quill.on('text-change', this._onTextChange);
+            quill.on('text-change', this._onTextChange);
 
             mountInstances.set(this._mountEl, {
-                quill: this.quill,
+                quill,
                 onTextChange: this._onTextChange,
             });
 
@@ -129,12 +133,12 @@ export function registerRichTextEditor() {
             this.setEditorHtml(getValue());
 
             this.$watch(() => getValue(), (value) => {
-                if (this.syncing || ! this.quill) {
+                if (this.syncing || ! quill) {
                     return;
                 }
 
                 const next = prepareEditorHtml(value);
-                const current = sanitizeRichText(this.quill.root.innerHTML);
+                const current = this.getEditorHtml();
 
                 if (current !== next) {
                     this.setEditorHtml(next);
@@ -153,7 +157,7 @@ export function registerRichTextEditor() {
                 destroyRichTextEditor(this._mountEl);
             }
 
-            this.quill = null;
+            quill = null;
             this._onTextChange = null;
             this._mountEl = null;
             this._initialized = false;
@@ -168,15 +172,36 @@ export function registerRichTextEditor() {
             }
         },
 
+        /**
+         * Semantic HTML for the current content (bullets as <ul>, numbered as <ol>),
+         * or an empty string when the editor has no text.
+         */
+        getEditorHtml() {
+            if (! quill || quill.getText().trim() === '') {
+                return '';
+            }
+
+            return sanitizeRichText(quill.getSemanticHTML());
+        },
+
         setEditorHtml(value) {
-            if (! this.quill) {
+            if (! quill) {
                 return;
             }
 
-            this.syncing = true;
             const html = prepareEditorHtml(value);
-            this.quill.root.innerHTML = html || '<p><br></p>';
-            this.syncing = false;
+
+            this.syncing = true;
+
+            try {
+                // Go through Quill's clipboard so lists, bold, links etc. are parsed
+                // into real Quill formats. Assigning root.innerHTML directly drops
+                // markup Quill does not recognise (e.g. <ul><li>), leaving the field blank.
+                quill.setContents(quill.clipboard.convert({ html }), 'silent');
+            } finally {
+                this.syncing = false;
+            }
         },
-    }));
+    };
+    });
 }

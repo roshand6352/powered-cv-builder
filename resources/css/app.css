@@ -238,3 +238,31 @@
         font-size: 16px !important;
     }
 }
+
+/*
+ * CV builder form overflow (mobile / tablet only).
+ *
+ * Grid items default to min-width:auto, so a wide child (rich text toolbar,
+ * native month picker) forced the whole column wider than the phone screen.
+ */
+@media (max-width: 1023px) {
+    .cv-builder-page [data-builder-section] .grid > * {
+        min-width: 0;
+    }
+
+    .cv-builder-page input[type='month'],
+    .cv-builder-page input[type='date'] {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .cv-builder-page input[type='month']::-webkit-date-and-time-value,
+    .cv-builder-page input[type='date']::-webkit-date-and-time-value {
+        text-align: left;
+    }
+
+    .cv-builder-page .cv-rich-text-field .ql-toolbar.ql-snow {
+        white-space: normal;
+        overflow-x: visible;
+    }
+}

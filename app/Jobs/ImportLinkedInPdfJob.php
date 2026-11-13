@@ -28,6 +28,7 @@ class ImportLinkedInPdfJob implements ShouldQueue
     public function __construct(
         public int $user_id,
         public string $uploaded_pdf_path,
+        public ?string $import_id = null,
     ) {}
 
     public function handle(AiService $aiService, LinkedInPdfImportService $importService): void
@@ -42,6 +43,19 @@ class ImportLinkedInPdfJob implements ShouldQueue
         if (! $user) {
             Log::warning('LinkedIn PDF import aborted: user not found', [
                 'user_id' => $this->user_id,
+            ]);
+            $importService->deleteTemporaryPdf($this->uploaded_pdf_path);
+
+            return;
+        }
+
+        // The user may have closed the modal, started a newer import, or the
+        // import may already have been reported as failed while it waited in
+        // the queue. Do not resurrect it.
+        if (! $importService->isActiveImport($user, $this->import_id)) {
+            Log::info('LinkedIn PDF import skipped: no longer active', [
+                'user_id' => $this->user_id,
+                'import_id' => $this->import_id,
             ]);
             $importService->deleteTemporaryPdf($this->uploaded_pdf_path);
 
@@ -191,6 +205,7 @@ class ImportLinkedInPdfJob implements ShouldQueue
             'message' => $message,
             'uploaded_pdf_path' => $retainUploadedPdfPath ? $this->uploaded_pdf_path : null,
             'mapped_cv_json' => $mappedCvJson,
+            'import_id' => $this->import_id,
         ]);
 
         Log::info('LinkedIn PDF import status updated', [
@@ -243,7 +258,26 @@ class ImportLinkedInPdfJob implements ShouldQueue
             ];
         }
 
-        if (str_contains($message, 'invalid pdf') || str_contains($message, 'not found')) {
+        if (str_contains($message, 'truncated')) {
+            return [
+                'analyzing_profile',
+                'This LinkedIn profile is too long for us to import in one go. Please remove some older roles from the PDF or enter your CV manually.',
+            ];
+        }
+
+        if (str_contains($message, 'secured pdf') || str_contains($message, 'encrypt') || str_contains($message, 'password')) {
+            return [
+                'reading_linkedin_profile',
+                'This PDF is password-protected. Please export your LinkedIn profile again without a password and try once more.',
+            ];
+        }
+
+        if (
+            str_contains($message, 'invalid pdf')
+            || str_contains($message, 'not found')
+            || str_contains($message, 'missing catalog')
+            || str_contains($message, 'object list')
+        ) {
             return [
                 'reading_linkedin_profile',
                 'Please upload a valid LinkedIn PDF file and try again.',

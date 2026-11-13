@@ -10,7 +10,11 @@ use App\Models\CvTemplate;
 use App\Services\CoverLetter\CoverLetterRenderer;
 use App\Services\CoverLetter\CoverLetterService;
 use App\Services\CoverLetter\CoverLetterTemplateRegistry;
+use App\Services\CoverLetter\CoverLetterCvExtractor;
+use App\Services\Cv\CvService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
@@ -21,6 +25,45 @@ class CoverLetterController extends Controller
         protected CoverLetterTemplateRegistry $templateRegistry,
         protected CoverLetterRenderer $renderer,
     ) {}
+
+    /**
+     * The signed-in user's own CVs for the "Create Cover Letter" picker.
+     * Only CVs owned by the authenticated user are ever returned.
+     */
+    public function cvOptions(Request $request, CvService $cvService, CoverLetterCvExtractor $extractor): JsonResponse
+    {
+        $userId = (int) $request->user()->id;
+
+        $cvs = $cvService->listForUser($request->user())
+            ->filter(fn ($cv) => $cv instanceof Cv && (int) $cv->user_id === $userId)
+            ->values();
+
+        $cvs->loadMissing('cvTemplate:id,name');
+
+        $payload = $cvs->map(function (Cv $cv) use ($extractor) {
+            $snapshot = $extractor->extract($cv);
+
+            return [
+                'id' => $cv->id,
+                'title' => $cv->title ?: 'Untitled CV',
+                'full_name' => (string) ($snapshot['full_name'] ?? ''),
+                'professional_title' => (string) ($snapshot['professional_title'] ?? ''),
+                'email' => (string) ($snapshot['contact']['email'] ?? ''),
+                'location' => (string) ($snapshot['contact']['location'] ?? ''),
+                'template' => $cv->cvTemplate?->name,
+                'updated_at' => $cv->updated_at?->toIso8601String(),
+                'updated_human' => $cv->updated_at?->diffForHumans(),
+                'continue_url' => route('cvs.cover-letters.create', $cv),
+            ];
+        })->values();
+
+        return response()->json([
+            'cvs' => $payload,
+            'links' => [
+                'create_cv' => route('dashboard.cvs'),
+            ],
+        ]);
+    }
 
     /**
      * Step: choose a cover letter template for the selected CV.

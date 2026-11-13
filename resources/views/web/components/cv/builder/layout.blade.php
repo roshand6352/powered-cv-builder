@@ -93,16 +93,61 @@
             LinkedIn data has been imported into this form locally. Review every field, then click Save Draft or Publish when you're ready.
         </div>
 
+        {{-- Mobile / tablet: Edit CV / Preview CV switcher --}}
+        <div class="shrink-0 border-b border-line bg-white px-4 py-2 sm:px-6 lg:hidden">
+            <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="CV builder view">
+                <button
+                    type="button"
+                    role="tab"
+                    id="cv-builder-tab-edit"
+                    aria-controls="cv-builder-form-panel"
+                    :aria-selected="mobileView === 'edit'"
+                    @click="setMobileView('edit')"
+                    class="inline-flex min-h-[2.5rem] items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    :class="mobileView === 'edit' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                    </svg>
+                    Edit CV
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    id="cv-builder-tab-preview"
+                    aria-controls="cv-preview-panel"
+                    :aria-selected="mobileView === 'preview'"
+                    @click="setMobileView('preview')"
+                    class="inline-flex min-h-[2.5rem] items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    :class="mobileView === 'preview' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Preview CV
+                </button>
+            </div>
+        </div>
+
         <div class="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
             {{-- Left: scrollable form panel (45%) --}}
-            <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain border-b border-line bg-white lg:w-[45%] lg:flex-none lg:border-b-0 lg:border-r">
+            <div
+                x-ref="formPanel"
+                id="cv-builder-form-panel"
+                class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain border-line bg-white lg:w-[45%] lg:flex-none lg:border-r"
+                :class="{ 'max-lg:hidden': mobileView === 'preview' }"
+            >
                 <div class="p-4 sm:p-6">
                     <x-cv.builder.forms />
                 </div>
             </div>
 
             {{-- Right: fixed live preview (55%) --}}
-            <div class="flex h-[42vh] min-h-0 shrink-0 flex-col overflow-hidden bg-cream sm:h-[45vh] lg:h-auto lg:w-[55%] lg:flex-1">
+            <div
+                class="flex min-h-0 flex-1 flex-col overflow-hidden bg-cream max-lg:hidden lg:h-auto lg:w-[55%]"
+                :class="{ 'max-lg:hidden': mobileView === 'edit' }"
+            >
                 <div
                     x-ref="previewPanel"
                     id="cv-preview-panel"
@@ -112,6 +157,8 @@
                 </div>
             </div>
         </div>
+
+        <x-cv.pdf-ready-sheet />
     </div>
 
     <x-linkedin-import-modal />

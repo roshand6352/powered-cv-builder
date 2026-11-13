@@ -43,7 +43,7 @@ class MarketingController extends Controller
             ),
             'seo' => [
                 'title' => 'CV Templates',
-                'description' => 'Browse professional, ATS-friendly CV templates. Pick a design and start building your resume in minutes.',
+                'description' => 'Browse professional, ATS-friendly CV templates. Pick a design and start building your CV in minutes.',
             ],
         ]);
     }
@@ -94,6 +94,16 @@ class MarketingController extends Controller
             'seo' => [
                 'title' => 'Privacy Policy',
                 'description' => 'Learn how ApplyDocs ZA collects, uses, and protects your personal information.',
+            ],
+        ]);
+    }
+
+    public function popia(): View
+    {
+        return view('web.landing.popia-notice', [
+            'seo' => [
+                'title' => 'POPIA Notice',
+                'description' => 'How ApplyDocs ZA processes your personal information under the Protection of Personal Information Act (POPIA).',
             ],
         ]);
     }

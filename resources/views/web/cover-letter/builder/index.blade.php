@@ -62,6 +62,28 @@
             </div>
         </header>
 
+        {{-- PDF download error (friendly copy only; technical details are logged server side) --}}
+        <div
+            x-show="pdfStatus === 'error' && pdfError"
+            x-cloak
+            role="alert"
+            data-pdf-error
+            class="flex shrink-0 flex-col gap-2 border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+        >
+            <span x-text="pdfError"></span>
+            <div class="flex shrink-0 items-center gap-2">
+                <button
+                    type="button"
+                    @click="retryPdf()"
+                    data-pdf-retry
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-red-700 ring-1 ring-red-200 transition hover:bg-red-100"
+                >
+                    Retry
+                </button>
+                <button type="button" @click="pdfError = null; pdfStatus = 'idle'" class="rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100" aria-label="Dismiss">Dismiss</button>
+            </div>
+        </div>
+
         <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
             {{-- Form --}}
             <section class="min-h-0 w-full overflow-y-auto border-b border-line bg-white p-4 sm:p-6 lg:w-[440px] lg:border-b-0 lg:border-r">
@@ -246,7 +268,7 @@
                     </div>
                 </div>
 
-                <p x-show="pdfError" x-text="pdfError" class="mt-4 text-xs text-red-600"></p>
+
             </section>
 
             {{-- Live preview --}}
@@ -260,6 +282,8 @@
                 </div>
             </section>
         </div>
+
+        <x-cv.pdf-ready-sheet id="cover-letter-pdf-ready-title" />
     </div>
 
     <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />

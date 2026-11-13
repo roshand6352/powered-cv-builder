@@ -1,164 +1,178 @@
-{{-- DomPDF structure layer — dynamic from captured template variables (not hardcoded per template). --}}
+{{--
+    DomPDF structure layer — engine fallbacks only. Template typography, colours and spacing
+    come from the captured preview CSS; this layer only replaces what DomPDF cannot render
+    (grid, flex, gap, box-sizing) and sets page flow to match the Browsershot export.
+--}}
 <style id="cv-pdf-dompdf-styles">
+@if($isCv ?? false)
+/* Same page box and continuation-page margins as PdfPaginationStyles (Browsershot). */
+@page {
+    size: 794px 1123px;
+    margin: 40px 0 32px 0;
+}
+
+/* Margins are not inherited from the base @page rule, so :first repeats them. */
+@page :first {
+    margin: 0 0 32px 0;
+}
+
+/* No margin on html: DomPDF maps html margins onto the @page box. */
+html {
+    padding: 0 !important;
+}
+@else
 @page {
     size: 794px 1123px;
     margin: 0;
 }
 
-html, body.cv-body.cv-pdf-export {
+html {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+@endif
+
+body.cv-body.cv-pdf-export {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     background: {{ $vars['--cv-bg'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
     font-family: '{{ $fontFamily }}', 'DejaVu Sans', sans-serif !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
 }
 
 body.cv-pdf-export .cv-page {
-    width: 100% !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
     margin: 0 !important;
-    padding: 0 !important;
-    background: {{ $vars['--cv-bg'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
     box-shadow: none !important;
-    page-break-after: always;
+    overflow: visible !important;
 }
 
-body.cv-pdf-export .cv-page:last-child {
-    page-break-after: auto;
-}
-
+/* Trailing padding must not spill a near-empty extra page. */
+body.cv-pdf-export .cv-page,
 body.cv-pdf-export .cv-content,
-body.cv-pdf-export .cv-main,
-body.cv-pdf-export table.cv-grid-sidebar--pdf td.cv-main {
-    background: {{ $vars['--cv-bg'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
+body.cv-pdf-export .cv-aside,
+body.cv-pdf-export .cv-main {
+    padding-bottom: 0 !important;
 }
 
-body.cv-pdf-export .cv-aside,
-body.cv-pdf-export table.cv-grid-sidebar--pdf td.cv-aside {
-    background: {{ $vars['--cv-sidebar-bg'] }} !important;
+/* Two-column templates: floated sidebar (240px incl. 24px side padding — no box-sizing in DomPDF) + 32px gap. */
+body.cv-pdf-export .cv-pdf-columns {
+    display: block !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+body.cv-pdf-export .cv-pdf-columns > .cv-aside {
+    width: 192px !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+body.cv-pdf-export .cv-pdf-columns--left > .cv-aside {
+    float: left !important;
+}
+
+body.cv-pdf-export .cv-pdf-columns--right > .cv-aside {
+    float: right !important;
+}
+
+/* DomPDF offsets a non-floated block by the float width plus its margin, so both columns float. 458px = 794 - 240 - 32 gap - 2 x 32 padding. */
+body.cv-pdf-export .cv-pdf-columns > .cv-main {
+    width: 458px !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+body.cv-pdf-export .cv-pdf-columns--left > .cv-main {
+    float: right !important;
+}
+
+body.cv-pdf-export .cv-pdf-columns--right > .cv-main {
+    float: left !important;
+}
+
+/* Section titles: flex row → inline icon + text. */
+body.cv-pdf-export .cv-section-title {
+    display: block !important;
+}
+
+body.cv-pdf-export img.cv-section-icon {
+    display: inline !important;
+    width: 1em !important;
+    height: 1em !important;
+    max-width: none !important;
+    margin: 0 7px 0 1px !important;
+    vertical-align: middle !important;
+}
+
+body.cv-pdf-export img.cv-contact-icon {
+    display: inline !important;
+    width: 0.92em !important;
+    height: 0.92em !important;
+    max-width: none !important;
+    margin: 0 5px 0 0 !important;
+    vertical-align: middle !important;
+}
+
+/* Item head: flex space-between → one-row table (floats nested in a floated column break DomPDF line widths). */
+body.cv-pdf-export .cv-item-head {
+    display: table !important;
+    width: 100% !important;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+}
+
+body.cv-pdf-export .cv-item-head > div {
+    display: table-cell !important;
     vertical-align: top !important;
 }
 
-body.cv-pdf-export table.cv-grid-sidebar--pdf {
-    width: 100% !important;
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-    table-layout: fixed !important;
-}
-
-body.cv-pdf-export table.cv-grid-sidebar--pdf td.cv-aside {
-    width: 240px !important;
-    padding: 32px 24px !important;
-}
-
-body.cv-pdf-export table.cv-grid-sidebar--pdf td.cv-main {
-    padding: {{ $vars['--cv-page-padding'] }} 32px !important;
-}
-
-body.cv-pdf-export table.cv-grid-sidebar--pdf td.cv-pdf-gap {
-    width: 32px !important;
-    padding: 0 !important;
-}
-
-body.cv-pdf-export .cv-content {
-    padding: {{ $vars['--cv-page-padding'] }} !important;
-}
-
-body.cv-pdf-export .cv-section {
-    margin-bottom: {{ $vars['--cv-section-gap'] }} !important;
-    page-break-inside: avoid;
-}
-
-body.cv-pdf-export .cv-section:last-child {
-    margin-bottom: 0 !important;
-}
-
-body.cv-pdf-export .cv-item {
-    margin-bottom: {{ $vars['--cv-item-gap'] }} !important;
-    page-break-inside: avoid;
-}
-
-body.cv-pdf-export .cv-item:last-child {
-    margin-bottom: 0 !important;
-}
-
-body.cv-pdf-export .cv-item-head {
-    display: block !important;
-    overflow: hidden !important;
+body.cv-pdf-export .cv-item-head > .cv-item-meta {
+    float: none !important;
+    width: 1% !important;
+    padding-left: 12px !important;
+    text-align: right !important;
+    white-space: nowrap !important;
 }
 
 body.cv-pdf-export .cv-item-title {
-    display: inline !important;
-    font-size: {{ $type['itemTitle'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
-}
-
-body.cv-pdf-export .cv-item-meta {
-    display: inline !important;
-    float: right !important;
-    font-size: {{ $type['itemMeta'] }} !important;
-    color: {{ $vars['--cv-muted'] }} !important;
+    display: block !important;
 }
 
 body.cv-pdf-export .cv-item-subtitle {
-    font-size: {{ $type['itemSubtitle'] }} !important;
-    color: {{ $vars['--cv-secondary'] }} !important;
-    clear: both !important;
+    clear: none !important;
 }
 
-body.cv-pdf-export .cv-item-text {
-    font-size: {{ $type['itemText'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
-    line-height: 1.55 !important;
-}
-
-body.cv-pdf-export .cv-section-title {
-    display: block !important;
-    font-size: {{ $type['sectionTitle'] }} !important;
-    font-weight: {{ $vars['--cv-heading-weight'] }} !important;
-    color: {{ $vars['--cv-accent'] }} !important;
-    border-bottom: {{ $vars['--cv-border-width'] }} {{ $vars['--cv-border-style'] }} {{ $vars['--cv-accent-border'] }} !important;
-    margin: 0 0 16px !important;
-    padding-bottom: 7px !important;
-}
-
-body.cv-pdf-export .cv-header {
-    margin-bottom: {{ $vars['--cv-section-gap'] }} !important;
-    page-break-inside: avoid;
-}
-
-body.cv-pdf-export .cv-header-name {
-    font-size: {{ $type['headerName'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
-    margin: 0 !important;
-}
-
-body.cv-pdf-export .cv-header-role {
-    font-size: {{ $type['headerRole'] }} !important;
-    color: {{ $vars['--cv-secondary'] }} !important;
-}
-
-body.cv-pdf-export .cv-header-summary {
-    font-size: {{ $type['headerSummary'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
-}
-
+/* Header contact row: flex-wrap + gap (.5rem 1rem) → inline blocks spaced only between items, so a full row still fits. */
 body.cv-pdf-export .cv-header-contact {
     display: block !important;
-    font-size: {{ $type['headerContact'] }} !important;
-    color: {{ $vars['--cv-muted'] }} !important;
+    margin-bottom: -8px !important;
 }
 
 body.cv-pdf-export .cv-header-contact > span,
 body.cv-pdf-export .cv-header-contact > a {
     display: inline-block !important;
-    margin: 0 16px 8px 0 !important;
+    margin: 0 0 8px 16px !important;
 }
 
+body.cv-pdf-export .cv-header-contact > span:first-child,
+body.cv-pdf-export .cv-header-contact > a:first-child {
+    margin-left: 0 !important;
+}
+
+/* Header photo: flex row / column → float or centred block. */
 body.cv-pdf-export .cv-header--photo-left .cv-header-photo {
     float: left !important;
     margin: 0 20px 12px 0 !important;
@@ -182,77 +196,79 @@ body.cv-pdf-export .cv-header-body {
     overflow: hidden !important;
 }
 
-body.cv-pdf-export .cv-header-photo,
-body.cv-pdf-export .cv-header-photo--sidebar,
-body.cv-pdf-export .cv-sidebar-photo img {
-    width: 96px !important;
-    height: 96px !important;
-    max-width: 96px !important;
-    border-radius: 999px !important;
-    border: 3px solid {{ $vars['--cv-photo-border'] }} !important;
+/* Tags: flex-wrap + gap → inline blocks. */
+body.cv-pdf-export .cv-tags {
+    display: block !important;
 }
 
 body.cv-pdf-export .cv-tag {
     display: inline-block !important;
-    background: {{ $vars['--cv-tag-bg'] }} !important;
-    color: {{ $vars['--cv-tag-color'] ?? $vars['--cv-text'] }} !important;
-    border-radius: 999px !important;
-    padding: 4px 11px !important;
     margin: 0 7px 7px 0 !important;
-    font-size: {{ $type['tag'] }} !important;
+    page-break-inside: avoid;
 }
 
+/* List rows: space-between → right float. */
 body.cv-pdf-export .cv-list-row {
     display: block !important;
     overflow: hidden !important;
-    font-size: {{ $type['listRow'] }} !important;
-    padding: 4px 0 !important;
+    page-break-inside: avoid;
 }
 
-body.cv-pdf-export .cv-list-row span:last-child {
+body.cv-pdf-export .cv-list-row > :last-child {
     float: right !important;
 }
 
-body.cv-pdf-export .cv-group {
-    margin-bottom: 20px !important;
+/* Rich text is real paragraphs — pre-line would add the markup's line breaks. */
+body.cv-pdf-export .cv-rich-text {
+    white-space: normal !important;
 }
 
-body.cv-pdf-export .cv-group-title {
-    font-size: {{ $type['groupTitle'] }} !important;
-    color: {{ $vars['--cv-text'] }} !important;
+/*
+ * Chrome collapses the first/last paragraph's default 1em margin through the rich-text wrapper
+ * into the neighbouring margins; DomPDF adds them instead. The wrapper takes the collapsed value.
+ */
+body.cv-pdf-export .cv-rich-text > :first-child {
+    margin-top: 0 !important;
 }
 
-/* Skill / progress bars — block-based fallback for unsupported flex layouts. */
-body.cv-pdf-export .cv-progress-bar,
-body.cv-pdf-export .cv-skill-bar,
-body.cv-pdf-export [class*="progress-bar"] {
-    display: block !important;
-    width: 100% !important;
-    height: 8px !important;
-    background: {{ $vars['--cv-border'] }} !important;
-    border-radius: 4px !important;
-    overflow: hidden !important;
-    margin: 6px 0 !important;
+body.cv-pdf-export .cv-rich-text > :last-child {
+    margin-bottom: 0 !important;
 }
 
-body.cv-pdf-export .cv-progress-fill,
-body.cv-pdf-export .cv-skill-fill,
-body.cv-pdf-export [class*="progress-fill"] {
-    display: block !important;
-    height: 100% !important;
-    background: {{ $vars['--cv-secondary'] }} !important;
+body.cv-pdf-export .cv-item-text {
+    margin-top: 1em !important;
 }
 
-/* Timeline-style experience items — border fallback (no ::before). */
-body.cv-pdf-export .cv-section-experience .cv-item {
-    border-left: 2px solid {{ $vars['--cv-accent-border'] }} !important;
-    padding-left: 16px !important;
-    margin-left: 6px !important;
+/* Page flow: sections and items may split (no large empty gaps); only titles stay with their content. */
+body.cv-pdf-export .cv-section,
+body.cv-pdf-export .cv-item {
+    page-break-inside: auto;
+}
+
+body.cv-pdf-export .cv-section-title {
+    page-break-after: avoid;
+}
+
+body.cv-pdf-export .cv-item-text p,
+body.cv-pdf-export .cv-item-text li {
+    page-break-inside: avoid;
+}
+
+body.cv-pdf-export .cv-header {
+    page-break-inside: avoid;
+}
+
+body.cv-pdf-export .cv-section:last-child,
+body.cv-pdf-export .cv-section:last-child .cv-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.cv-pdf-export .cv-section:empty {
+    display: none !important;
 }
 
 body.cv-pdf-export img {
     max-width: 100% !important;
-    height: auto !important;
 }
 
 body.cv-pdf-export .cv-icon-spacer {

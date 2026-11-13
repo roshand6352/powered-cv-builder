@@ -15,6 +15,12 @@ return [
         'trusted_users' => '10,000',
     ],
 
+    // Public review page for the homepage hero star rating (e.g. Trustpilot, Google reviews).
+    // Leave empty to render the stars as plain, non-clickable text.
+    'reviews' => [
+        'url' => env('MARKETING_REVIEWS_URL'),
+    ],
+
     'nav' => [
         ['label' => 'Tools', 'href' => '/#tools'],
         ['label' => 'How it works', 'href' => '/#how'],
@@ -120,7 +126,7 @@ return [
     'how_it_works_cover_letter' => [
         'label' => 'Cover Letter Generator',
         'title' => 'From job listing to tailored cover letter in under 3 minutes',
-        'subtitle' => 'No writing experience needed. Paste the job, answer a few prompts and you are done.',
+        'subtitle' => 'No writing experience needed. Paste the job description, answer a few prompts and you are done.',
         'steps' => [
             ['title' => 'Log in or sign up free', 'description' => 'Already built your CV with ApplyDocs ZA? Jump straight in. New here? Takes 30 seconds to get started.'],
             ['title' => 'Paste the job description', 'description' => 'Copy the job listing you are applying for. ApplyDocs ZA reads it and tailors your letter to that specific role.'],
@@ -204,8 +210,8 @@ return [
 
     'faqs' => [
         [
-            'question' => 'Is the CV Builder really free? What is the catch?',
-            'answer' => 'There is no catch. The CV Builder and Cover Letter Generator are completely free to use. You can build, edit and download your CV at no cost. Free downloads include an ApplyDocs ZA watermark. If you want a clean, watermark-free PDF and access to AI writing features, you can upgrade to Pro - starting from R 80 once-off.',
+            'question' => 'Is ApplyDocs free to use?',
+            'answer' => 'Yes, you can create, edit and download a CV for free. Free CV downloads include the ApplyDocs watermark. AI cover letter writing and other premium features are available on paid plans.',
         ],
         [
             'question' => 'What does the watermark look like on my free download?',
@@ -216,20 +222,25 @@ return [
             'answer' => 'The AI improves how you express your experience, not what you have done. Your facts, your roles, your voice - it just helps you phrase things more professionally. You stay in control of all content. The AI rewrites clunky bullet points into cleaner, stronger sentences without fabricating anything.',
         ],
         [
-            'question' => 'Will my CV pass ATS filters used by employers and recruitment agencies?',
-            'answer' => 'Yes. All ApplyDocs ZA templates are built to be ATS-compliant - formatted to be parsed correctly by the automated screening software used by employers, recruitment agencies and job platforms. We avoid common formatting pitfalls like tables, graphics and unusual fonts that cause ATS rejection.',
+            'question' => 'Will my CV pass Applicant Tracking Systems (ATS)?',
+            'answer' => 'ApplyDocs templates are designed to be ATS-friendly, using clear layouts and easy-to-read formatting. However, no platform can guarantee that every CV will pass every ATS, as systems and employer requirements differ.',
         ],
         [
             'question' => 'Is my personal information safe? Is ApplyDocs ZA POPIA compliant?',
             'answer' => 'Yes. ApplyDocs ZA is fully POPIA compliant. Your personal information is stored securely and is never sold or shared with third parties. You can request deletion of your data at any time. Our full POPIA notice and privacy policy are available in the footer.',
+            'link' => ['label' => 'Read our POPIA notice', 'href' => '/popia-notice'],
         ],
         [
             'question' => 'What payment methods are available?',
-            'answer' => 'We accept Card, EFT, Capitec Pay and many more payment options. All transactions are processed securely in South African Rand. There are no dollar conversions or hidden fees. Pro access is available as a once-off payment - choose 24 hours, weekly, monthly or lifetime access.',
+            'answer' => 'We accept Card, EFT, Capitec Pay and many more payment options. All transactions are processed securely in South African Rand. There are no dollar conversions or hidden fees. Pro access is available as a once-off payment - choose 24 hours, weekly, monthly or yearly access.',
+        ],
+        [
+            'question' => 'What happens when my paid access expires?',
+            'answer' => 'Your CVs remain saved to your account and can still be edited after your paid access expires. However, your account will return to the free plan, and any future CV downloads will include the ApplyDocs watermark unless you purchase another paid plan. All paid plans are once-off purchases and do not renew automatically.',
         ],
         [
             'question' => 'Can I edit my CV after I have already downloaded it?',
-            'answer' => 'Yes. Your CV is saved to your account and you can return to edit it at any time - even after downloading. Free users can edit and re-download with the watermark. Pro users can always download a clean, watermark-free version of their latest saved CV.',
+            'answer' => 'Yes. Your CV is saved to your account and you can return to edit it at any time - even after downloading. Free users can edit and re-download with the watermark. Pro users can download a clean, watermark-free version of their latest saved CV while their paid access is active.',
         ],
     ],
 
@@ -247,7 +258,7 @@ return [
         ],
         'legal' => [
             ['label' => 'Privacy policy', 'href' => '/privacy-policy'],
-            ['label' => 'POPIA notice', 'href' => '/privacy-policy'],
+            ['label' => 'POPIA notice', 'href' => '/popia-notice'],
             ['label' => 'Terms of use', 'href' => '/terms'],
         ],
         'badges' => ['POPIA compliant', 'SSL secured', 'Made in ZA'],

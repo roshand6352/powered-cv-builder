@@ -131,12 +131,9 @@ class AiPromptBuilder extends BaseService
      */
     protected function improveExperience(array $payload): array
     {
+        // Only the description is sent: company, position, location, and dates
+        // are separate fields and must never be echoed back into the text.
         $lines = [
-            'Company: '.($payload['company'] ?? 'N/A'),
-            'Position: '.($payload['position'] ?? 'N/A'),
-            'Location: '.($payload['location'] ?? 'N/A'),
-            'Dates: '.($payload['start_date'] ?? '').' - '.($payload['end_date'] ?? 'Present'),
-            '',
             'Current description:',
             (string) ($payload['description'] ?? ''),
         ];

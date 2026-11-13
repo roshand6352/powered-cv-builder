@@ -29,6 +29,7 @@
         <x-dashboard.stat-card
             label="Plan"
             :value="$stats['plan']"
+            :route="route('dashboard.subscription')"
             hint="Current subscription"
             icon="credit-card"
             color="orange"

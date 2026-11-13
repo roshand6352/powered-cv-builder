@@ -104,6 +104,8 @@
                 </p>
             </div>
         </main>
+
+        <x-cv.pdf-ready-sheet />
     </div>
 </body>
 </html>

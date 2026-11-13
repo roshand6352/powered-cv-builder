@@ -105,7 +105,34 @@
                     @csrf
 
                     <div class="mt-6">
-                        <label for="linkedin-profile-pdf" class="block text-sm font-medium text-slate-700">PDF file</label>
+                        <div
+                            x-data="{ helpOpen: false }"
+                            x-on:open-linkedin-pdf-import-modal.window="helpOpen = false"
+                            class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
+                        >
+                            <label for="linkedin-profile-pdf" class="block text-sm font-medium text-slate-700">PDF file</label>
+                            <button
+                                type="button"
+                                @click="helpOpen = ! helpOpen"
+                                :aria-expanded="helpOpen ? 'true' : 'false'"
+                                aria-controls="linkedin-pdf-help"
+                                class="inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-brand-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                            >
+                                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                </svg>
+                                How do I get my LinkedIn PDF?
+                            </button>
+                            <div
+                                x-show="helpOpen"
+                                x-transition
+                                id="linkedin-pdf-help"
+                                role="note"
+                                class="w-full rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-slate-700"
+                            >
+                                Open your LinkedIn profile, select More, then choose Save to PDF. Once downloaded, upload the PDF here to import your information.
+                            </div>
+                        </div>
                         <input
                             x-ref="fileInput"
                             id="linkedin-profile-pdf"

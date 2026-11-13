@@ -5,6 +5,7 @@
  * Template colors, typography, and layout variants remain in the captured preview styles.
  */
 
+@if($engineCompat ?? true)
 body.cv-pdf-export .cv-section-title {
     display: block !important;
     width: 100% !important;
@@ -84,6 +85,8 @@ body.cv-pdf-export .cv-list-row {
 body.cv-pdf-export .cv-list-row span:last-child {
     float: right !important;
 }
+
+@endif
 
 body.cv-pdf-export table.cv-grid-sidebar--pdf {
     display: table !important;

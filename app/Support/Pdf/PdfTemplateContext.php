@@ -41,6 +41,14 @@ class PdfTemplateContext
         ];
     }
 
+    /**
+     * Matches the CV page element itself; injected PDF CSS also mentions `.cv-page` for every document.
+     */
+    public static function isCvDocument(string $html): bool
+    {
+        return preg_match('/\sclass=["\'][^"\']*\bcv-page\b/i', $html) === 1;
+    }
+
     public static function detectLayoutKey(string $html): ?string
     {
         if (preg_match('/\bcv-layout-([a-z0-9_-]+)\b/i', $html, $match)) {

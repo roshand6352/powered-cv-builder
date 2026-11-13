@@ -98,8 +98,8 @@ class PdfCssResolver extends BaseService
             '/flex-wrap\s*:[^;]*;/i',
             '/flex-shrink\s*:[^;]*;/i',
             '/object-fit\s*:[^;]*;/i',
-            '/transform\s*:[^;]*;/i',
-            '/transform-origin\s*:[^;]*;/i',
+            '/(?<![\w-])transform\s*:[^;]*;/i',
+            '/(?<![\w-])transform-origin\s*:[^;]*;/i',
             '/inset\s*:[^;]*;/i',
             '/place-items\s*:[^;]*;/i',
         ];

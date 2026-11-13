@@ -4,7 +4,7 @@ import {
     buildPdfSyncPayload,
     prepareAutosavePayload,
 } from './builder-payload';
-import { downloadCvPdf, resolveCvPdfDownloadError } from './pdf-download';
+import { cvPdfReadySheet, downloadCvPdf, resolveCvPdfDownloadError } from './pdf-download';
 import { applyTemplateMeta, inlineStyle, normalizePhotoPosition } from './layout-resolver';
 import {
     isAboutEnabledInTemplate,
@@ -19,7 +19,8 @@ import {
 import { broadcastPreviewState, openPreviewChannel } from './preview-sync';
 import { applyPreviewPatches } from './preview-patcher';
 import { dedupeWithinMs, perfLog, scheduleFrame } from './builder-perf';
-import { prepareEditorHtml, richTextToPlainText } from '../shared/rich-text-sanitize';
+import { markdownToHtml } from '../shared/markdown-to-html';
+import { prepareEditorHtml, richTextToPlainText, richTextToStructuredText } from '../shared/rich-text-sanitize';
 import { openAiUpgradeModal } from '../shared/ai-upgrade';
 import {
     isStartAfterEnd,
@@ -102,6 +103,9 @@ export function registerCvBuilder() {
         pendingPreviewSection: null,
         previewScaleSnapshot: null,
         previewChannel: null,
+        mobileView: 'edit',
+        formPanelScrollTop: 0,
+        ...cvPdfReadySheet(),
 
         monthInputValue: toMonthInputValue,
         isStartAfterEnd,
@@ -241,6 +245,31 @@ export function registerCvBuilder() {
         activeTemplateName() {
             return this.templateCatalog.find((item) => item.key === this.activeTemplate)?.name
                 ?? this.activeTemplate;
+        },
+
+        setMobileView(view) {
+            if (view === this.mobileView) {
+                return;
+            }
+
+            if (this.mobileView === 'edit' && this.$refs.formPanel) {
+                this.formPanelScrollTop = this.$refs.formPanel.scrollTop;
+            }
+
+            this.mobileView = view;
+
+            this.$nextTick(() => {
+                if (view === 'edit') {
+                    if (this.$refs.formPanel) {
+                        this.$refs.formPanel.scrollTop = this.formPanelScrollTop;
+                    }
+
+                    return;
+                }
+
+                this.previewScaleSnapshot = null;
+                this.schedulePreviewScale();
+            });
         },
 
         destroy() {
@@ -617,19 +646,18 @@ export function registerCvBuilder() {
             }
 
             return this.runAiRequest(this.urls.aiExperience, {
-                company: item.company,
-                position: item.position,
-                location: item.location,
-                start_date: item.start_date,
-                end_date: item.current ? 'Present' : item.end_date,
-                description: richTextToPlainText(item.description),
+                // Only the description is sent; company, position, location and
+                // dates are separate fields. List/line structure is preserved.
+                description: richTextToStructuredText(item.description),
             }, {
                 fieldKey: resolvedFieldKey,
                 apply: (log) => {
                     const text = log.result ?? log.response?.text;
 
                     if (text) {
-                        item.description = prepareEditorHtml(text);
+                        // Make Experience the active section so the live preview refreshes it.
+                        this.setActiveSection('experience');
+                        item.description = prepareEditorHtml(markdownToHtml(text));
                     }
                 },
             });
@@ -724,12 +752,18 @@ export function registerCvBuilder() {
             return (this.urls.pdfStatus ?? '').replace('__ID__', exportId);
         },
 
-        applyCvResponse(cv) {
+        applyCvResponse(cv, { keepTitle = false } = {}) {
             const previousSlug = this.slug;
 
             this.id = cv.id;
             this.slug = cv.slug;
-            this.title = cv.title;
+
+            // Writing the server's trimmed title back while the user is typing resets the
+            // input value mid-composition (mobile keyboards drop/duplicate characters).
+            if (! keepTitle) {
+                this.title = cv.title;
+            }
+
             this.status = cv.status;
 
             if (cv.slug && previousSlug && cv.slug !== previousSlug) {
@@ -1120,11 +1154,10 @@ export function registerCvBuilder() {
             const startedAt = performance.now();
 
             try {
-                await downloadCvPdf({
+                const result = await downloadCvPdf({
                     pdfDownloadUrl: this.urls.pdfDownload,
                     previewFrame: this.$refs.previewFrame,
                     title: this.title,
-                    slug: this.slug,
                     cvDocument: this.document,
                     activeTemplate: this.activeTemplate,
                     templateCatalog: this.templateCatalog,
@@ -1149,6 +1182,10 @@ export function registerCvBuilder() {
 
                 this.pdfExportStatus = 'idle';
                 perfLog('PDF_TIME', startedAt);
+
+                if (result.needsUserAction) {
+                    this.showPdfReady(result.file);
+                }
             } catch (error) {
                 this.pdfExportStatus = 'error';
                 perfLog('PDF_TIME', startedAt);
@@ -1202,11 +1239,15 @@ export function registerCvBuilder() {
 
             this.autosaveInFlight = axios.patch(this.urls.autosave, payload)
                 .then(({ data }) => {
-                    this.applyCvResponse(data.cv);
+                    this.applyCvResponse(data.cv, { keepTitle: true });
                     this.saveStatus = 'saved';
                     this.isDirty = false;
                     this.errors = {};
                     perfLog('AUTO_SAVE_TIME', startedAt);
+
+                    if (this.title !== payload.title) {
+                        this.markDirty();
+                    }
                 })
                 .catch((error) => {
                     this.saveStatus = 'error';

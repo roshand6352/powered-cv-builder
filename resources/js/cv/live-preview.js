@@ -1,7 +1,7 @@
 import { ClientPreviewRenderer } from './preview-renderer';
 import { applyTemplateMeta } from './layout-resolver';
 import { openPreviewChannel } from './preview-sync';
-import { downloadCvPdf, resolveCvPdfDownloadError } from './pdf-download';
+import { cvPdfReadySheet, downloadCvPdf, resolveCvPdfDownloadError } from './pdf-download';
 import { normalizeDocumentDates } from './date-format';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -20,6 +20,7 @@ export function registerCvLivePreview() {
         lastPreviewHtml: '',
         pdfExportStatus: 'idle',
         pdfExportError: null,
+        ...cvPdfReadySheet(),
         syncStatus: 'waiting',
         lastUpdateAt: null,
         channel: null,
@@ -303,11 +304,10 @@ export function registerCvLivePreview() {
             this.pdfExportError = null;
 
             try {
-                await downloadCvPdf({
+                const result = await downloadCvPdf({
                     pdfDownloadUrl: this.urls.pdfDownload,
                     previewFrame: this.$refs.previewFrame,
                     title: this.title,
-                    slug: String(this.id),
                     cvDocument: this.document,
                     activeTemplate: this.activeTemplate,
                     templateCatalog: this.templateCatalog,
@@ -317,6 +317,10 @@ export function registerCvLivePreview() {
                 });
 
                 this.pdfExportStatus = 'idle';
+
+                if (result.needsUserAction) {
+                    this.showPdfReady(result.file);
+                }
             } catch (error) {
                 this.pdfExportStatus = 'error';
                 this.pdfExportError = await resolveCvPdfDownloadError(error);

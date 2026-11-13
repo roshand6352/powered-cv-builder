@@ -14,7 +14,7 @@
                         <span class="faq-arrow">&#9662;</span>
                     </button>
                     <div class="faq-a">
-                        <div class="faq-a-inner">{{ $item['answer'] }}</div>
+                        <div class="faq-a-inner">{{ $item['answer'] }}@if (! empty($item['link'])) <a href="{{ $item['link']['href'] }}" class="link-orange">{{ $item['link']['label'] }}</a>@endif</div>
                     </div>
                 </div>
             @endforeach

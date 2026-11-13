@@ -26,13 +26,17 @@ class PdfThemeStyleInjector
             'fontFamily' => $context['fontFamily'],
             'fontFaces' => $context['fontFaces'],
         ])->render()
-            .view('web.pdf.pdf-export-layout')->render();
+            .view('web.pdf.pdf-export-layout', [
+                // Float/inline fallbacks are only needed by DomPDF; Chrome renders the preview's flex layout as-is.
+                'engineCompat' => $engine === PdfEngineResolver::ENGINE_DOMPDF,
+            ])->render();
 
         if ($engine === PdfEngineResolver::ENGINE_DOMPDF) {
             $styleTag .= view('web.pdf.dompdf.structure', [
                 'vars' => $context['vars'],
                 'type' => $context['type'],
                 'fontFamily' => $context['fontFamily'],
+                'isCv' => PdfTemplateContext::isCvDocument($html),
             ])->render();
         }
 
