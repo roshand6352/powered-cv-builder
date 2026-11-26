@@ -5,19 +5,15 @@
 --}}
 <style id="cv-pdf-dompdf-styles">
 @if($isCv ?? false)
-/* Same page box and continuation-page margins as PdfPaginationStyles (Browsershot). */
+/* Zero margins so CV backgrounds/sidebar colour paint edge-to-edge across page breaks. */
 @page {
     size: 794px 1123px;
-    margin: 40px 0 32px 0;
-}
-
-/* Margins are not inherited from the base @page rule, so :first repeats them. */
-@page :first {
-    margin: 0 0 32px 0;
+    margin: 0;
 }
 
 /* No margin on html: DomPDF maps html margins onto the @page box. */
 html {
+    margin: 0 !important;
     padding: 0 !important;
 }
 @else
@@ -65,9 +61,18 @@ body.cv-pdf-export .cv-main {
 /* Two-column templates: floated sidebar (240px incl. 24px side padding — no box-sizing in DomPDF) + 32px gap. */
 body.cv-pdf-export .cv-pdf-columns {
     display: block !important;
+    position: relative !important;
     padding: 0 !important;
     min-height: 0 !important;
     height: auto !important;
+}
+
+/* Ensure the columns wrapper height includes both floats (absolute sidebar bg uses top/bottom). */
+body.cv-pdf-export .cv-pdf-columns::after {
+    content: '' !important;
+    display: block !important;
+    clear: both !important;
+    height: 0 !important;
 }
 
 body.cv-pdf-export .cv-pdf-columns > .cv-aside {
@@ -246,6 +251,47 @@ body.cv-pdf-export .cv-item-text li {
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
     max-width: 100% !important;
+}
+
+/* DomPDF often collapses default list indent. */
+body.cv-pdf-export .cv-rich-text ul,
+body.cv-pdf-export .cv-rich-text ol,
+body.cv-pdf-export .cv-item-text ul,
+body.cv-pdf-export .cv-item-text ol {
+    margin: 0.35rem 0 0 !important;
+    padding-left: 1.35rem !important;
+}
+
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-item {
+    padding-left: 2.75rem !important;
+    margin-left: 0.65rem !important;
+}
+
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-rich-text ul,
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-rich-text ol,
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-item-text ul,
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-item-text ol {
+    list-style: disc !important;
+    list-style-type: disc !important;
+    list-style-position: inside !important;
+    padding-left: 8px !important;
+    margin-left: 0 !important;
+}
+
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-rich-text li,
+body.cv-pdf-export .cv-layout-smart .cv-section-experience .cv-item-text li {
+    list-style: disc !important;
+    list-style-type: disc !important;
+    list-style-position: inside !important;
+    padding-left: 0 !important;
+}
+
+body.cv-pdf-export .cv-layout-smart .cv-aside .cv-header-name {
+    color: #ffffff !important;
+    font-size: 17px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 /*

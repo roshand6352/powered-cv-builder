@@ -40,11 +40,7 @@ class PdfThemeStyleInjector
             ])->render();
         }
 
-        if (preg_match('/<\/head>/i', $html) === 1) {
-            return preg_replace('/<\/head>/i', $styleTag.'</head>', $html, 1) ?? $html;
-        }
-
-        return $styleTag.$html;
+        return HtmlHeadInjector::beforeClose($html, $styleTag);
     }
 
     /**

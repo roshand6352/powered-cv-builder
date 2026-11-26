@@ -4,7 +4,9 @@ namespace App\Services\Pdf;
 
 use App\Services\BaseService;
 use App\Support\Cv\CvTemplateLayoutResolver;
+use App\Support\Pdf\HtmlHeadInjector;
 use App\Support\Pdf\PdfPaginationStyles;
+use App\Support\Pdf\PdfSidebarBackgroundInjector;
 use App\Support\Pdf\PdfThemeStyleInjector;
 
 /**
@@ -27,6 +29,8 @@ class CvPreviewHtmlPdfPreparer extends BaseService
         $html = $this->addPdfExportBodyClass($html);
 
         $html = PdfThemeStyleInjector::inject($html);
+        // Fixed sidebar colour strip so page breaks stay continuous in Browsershot (and DomPDF).
+        $html = PdfSidebarBackgroundInjector::inject($html);
 
         return $this->ensurePdfExportStyles($html, $watermark);
     }
@@ -175,12 +179,7 @@ class CvPreviewHtmlPdfPreparer extends BaseService
 CSS;
 
             $styleTag = '<style id="cv-pdf-export-styles">'.$exportCss.'</style>';
-
-            if (preg_match('/<\/head>/i', $html) === 1) {
-                $html = preg_replace('/<\/head>/i', $styleTag.'</head>', $html, 1) ?? $html;
-            } else {
-                $html = $styleTag.$html;
-            }
+            $html = HtmlHeadInjector::beforeClose($html, $styleTag);
         }
 
         return $this->ensureWatermarkStyles($html, $watermark);
@@ -259,10 +258,6 @@ CSS;
 
         $styleTag = '<style id="pdf-watermark-styles">'.$watermarkCss.'</style>';
 
-        if (preg_match('/<\/head>/i', $html) === 1) {
-            return preg_replace('/<\/head>/i', $styleTag.'</head>', $html, 1) ?? ($styleTag.$html);
-        }
-
-        return $styleTag.$html;
+        return HtmlHeadInjector::beforeClose($html, $styleTag);
     }
 }
