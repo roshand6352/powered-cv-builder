@@ -76,6 +76,9 @@ body.cv-pdf-export .cv-pdf-columns > .cv-aside {
     padding-right: 24px !important;
     min-height: 0 !important;
     height: auto !important;
+    /* Wrap long sidebar text inside the fixed float width (avoid overflow:hidden — it can clip multi-page floats). */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 body.cv-pdf-export .cv-pdf-columns--left > .cv-aside {
@@ -93,6 +96,9 @@ body.cv-pdf-export .cv-pdf-columns > .cv-main {
     padding-right: 32px !important;
     min-height: 0 !important;
     height: auto !important;
+    /* Wrap long About/description text inside the floated main column. */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 body.cv-pdf-export .cv-pdf-columns--left > .cv-main {
@@ -219,8 +225,27 @@ body.cv-pdf-export .cv-list-row > :last-child {
 }
 
 /* Rich text is real paragraphs — pre-line would add the markup's line breaks. */
-body.cv-pdf-export .cv-rich-text {
+body.cv-pdf-export .cv-rich-text,
+body.cv-pdf-export .cv-item-text,
+body.cv-pdf-export .cv-header-summary,
+body.cv-pdf-export .cv-header-name,
+body.cv-pdf-export .cv-header-role,
+body.cv-pdf-export .cv-item-title,
+body.cv-pdf-export .cv-item-subtitle,
+body.cv-pdf-export .cv-content {
     white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+}
+
+body.cv-pdf-export .cv-rich-text p,
+body.cv-pdf-export .cv-rich-text li,
+body.cv-pdf-export .cv-item-text p,
+body.cv-pdf-export .cv-item-text li {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
 }
 
 /*
@@ -249,9 +274,13 @@ body.cv-pdf-export .cv-section-title {
     page-break-after: avoid;
 }
 
+/* Long About/description paragraphs must be allowed to split across pages or DomPDF drops/clips them. */
 body.cv-pdf-export .cv-item-text p,
-body.cv-pdf-export .cv-item-text li {
-    page-break-inside: avoid;
+body.cv-pdf-export .cv-item-text li,
+body.cv-pdf-export .cv-rich-text p,
+body.cv-pdf-export .cv-rich-text li,
+body.cv-pdf-export .cv-header-summary p {
+    page-break-inside: auto;
 }
 
 body.cv-pdf-export .cv-header {

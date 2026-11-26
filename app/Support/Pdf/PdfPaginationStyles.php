@@ -53,11 +53,31 @@ body.cv-pdf-export .cv-item {
     break-inside: auto !important;
 }
 
-body.cv-pdf-export .cv-item li,
-body.cv-pdf-export .cv-item p {
+/* Prefer keeping short bullets together, but never force a page-tall paragraph onto one page. */
+body.cv-pdf-export .cv-item li {
     break-inside: avoid-page !important;
     orphans: 2;
     widows: 2;
+}
+
+body.cv-pdf-export .cv-item p,
+body.cv-pdf-export .cv-rich-text p,
+body.cv-pdf-export .cv-header-summary p {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    orphans: 2;
+    widows: 2;
+}
+
+body.cv-pdf-export .cv-main,
+body.cv-pdf-export .cv-aside,
+body.cv-pdf-export .cv-content,
+body.cv-pdf-export .cv-rich-text,
+body.cv-pdf-export .cv-item-text,
+body.cv-pdf-export .cv-header-summary {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
 }
 
 body.cv-pdf-export .cv-tags,
