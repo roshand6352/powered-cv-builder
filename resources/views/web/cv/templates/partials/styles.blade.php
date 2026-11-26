@@ -274,8 +274,58 @@
     .cv-layout-premium .cv-header-role { color: var(--cv-secondary); font-weight: 600; }
     .cv-layout-premium .cv-section-title { color: var(--cv-secondary); border-bottom-color: var(--cv-secondary); }
 
-    .cv-layout-smart .cv-section-experience .cv-item { border-left: 2px solid var(--cv-accent-border); padding-left: 1rem; margin-left: .35rem; position: relative; }
-    .cv-layout-smart .cv-section-experience .cv-item::before { content: ''; position: absolute; left: -.47rem; top: .4rem; width: .55rem; height: .55rem; border-radius: 50%; background: var(--cv-accent); }
+    /* Smart sidebar name: dark sidebar needs light text + compact wrapping in the narrow column. */
+    .cv-layout-smart .cv-aside .cv-header-name,
+    .cv-body--preview .cv-layout-smart .cv-aside .cv-header-name,
+    .cv-body--embedded .cv-layout-smart .cv-aside .cv-header-name,
+    .cv-body--export .cv-layout-smart .cv-aside .cv-header-name,
+    .cv-body--pdf .cv-layout-smart .cv-aside .cv-header-name {
+        color: #ffffff;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        font-size: calc(var(--cv-font-size) * 1.15);
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+        overflow-wrap: anywhere;
+        word-wrap: break-word;
+        word-break: break-word;
+        hyphens: auto;
+    }
+    /* Smart experience timeline: custom inset bullets so markers never sit on the vertical line. */
+    .cv-layout-smart .cv-section-experience .cv-item {
+        border-left: 2px solid var(--cv-accent-border);
+        padding-left: 2.75rem;
+        margin-left: .65rem;
+        position: relative;
+    }
+    .cv-layout-smart .cv-section-experience .cv-item::before {
+        content: '';
+        position: absolute;
+        left: -.42rem;
+        top: .4rem;
+        width: .55rem;
+        height: .55rem;
+        border-radius: 50%;
+        background: var(--cv-accent);
+        z-index: 1;
+    }
+    .cv-layout-smart .cv-section-experience .cv-item .cv-rich-text ul,
+    .cv-layout-smart .cv-section-experience .cv-item .cv-rich-text ol,
+    .cv-layout-smart .cv-section-experience .cv-item .cv-item-text ul,
+    .cv-layout-smart .cv-section-experience .cv-item .cv-item-text ol {
+        list-style: disc;
+        list-style-position: inside;
+        margin: .35rem 0 0;
+        padding-left: .5rem;
+    }
+    .cv-layout-smart .cv-section-experience .cv-item .cv-rich-text li,
+    .cv-layout-smart .cv-section-experience .cv-item .cv-item-text li {
+        list-style: disc;
+        list-style-position: inside;
+        margin: .2rem 0;
+        padding-left: 0;
+    }
     .cv-layout-smart .cv-section-title { letter-spacing: .08em; }
 
     @media (max-width: 768px) {

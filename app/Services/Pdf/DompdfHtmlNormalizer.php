@@ -5,6 +5,8 @@ namespace App\Services\Pdf;
 use App\Services\BaseService;
 use App\Support\Pdf\DompdfIconFallback;
 use App\Support\Pdf\DompdfLayoutTransformer;
+use App\Support\Pdf\HtmlHeadInjector;
+use App\Support\Pdf\PdfSidebarBackgroundInjector;
 use App\Support\Pdf\PdfTemplateContext;
 
 /**
@@ -36,6 +38,7 @@ class DompdfHtmlNormalizer extends BaseService
         if ($isCv) {
             $html = $this->fontLoader->injectFontFaces($html);
             $html = DompdfIconFallback::replaceWithImages($html, $variables);
+            $html = PdfSidebarBackgroundInjector::inject($html);
             $html = DompdfLayoutTransformer::apply($html);
             $html = $this->injectPageFlowStyles($html, $variables);
         } else {
@@ -61,7 +64,7 @@ class DompdfHtmlNormalizer extends BaseService
     }
 
     /**
-     * Added after CSS resolution, which rewrites position:fixed (needed for the repeating sidebar colour).
+     * Added after CSS resolution. Provides the content-height absolute sidebar colour strip for DomPDF.
      *
      * @param  array<string, string>  $variables
      */
@@ -69,11 +72,7 @@ class DompdfHtmlNormalizer extends BaseService
     {
         $styleTag = view('web.pdf.dompdf.page-flow', ['vars' => $variables])->render();
 
-        if (preg_match('/<\/head>/i', $html) === 1) {
-            return preg_replace('/<\/head>/i', $styleTag.'</head>', $html, 1) ?? $html;
-        }
-
-        return $styleTag.$html;
+        return HtmlHeadInjector::beforeClose($html, $styleTag);
     }
 
     protected function markNormalized(string $html): string

@@ -10,8 +10,8 @@ use DOMXPath;
  * DomPDF-only markup adjustments so grid sidebar layouts render with floats.
  *
  * DomPDF has no grid/flex and cannot split a table row across pages, so the sidebar
- * and main column become two floated columns (floats paginate), with a fixed
- * background column repeating the sidebar colour on every page.
+ * and main column become two floated columns (floats paginate). Sidebar colour is
+ * painted by the content-height absolute strip from PdfSidebarBackgroundInjector.
  */
 class DompdfLayoutTransformer
 {
@@ -46,8 +46,6 @@ class DompdfLayoutTransformer
 
     protected static function layoutSidebarColumns(DOMDocument $document, DOMXPath $xpath): void
     {
-        $backgroundAdded = false;
-
         foreach (self::byClass($xpath, 'cv-grid-sidebar') as $grid) {
             $aside = self::childByClass($grid, 'cv-aside');
             $main = self::childByClass($grid, 'cv-main');
@@ -62,17 +60,6 @@ class DompdfLayoutTransformer
             // The float must precede the main column in source order to sit beside it.
             if (self::childIndex($aside) > self::childIndex($main)) {
                 $grid->insertBefore($aside, $main);
-            }
-
-            $body = $document->getElementsByTagName('body')->item(0);
-
-            if (! $backgroundAdded && $body instanceof DOMElement) {
-                // Fixed elements repeat on every DomPDF page, keeping the sidebar colour beside the content.
-                $background = $document->createElement('div');
-                $background->setAttribute('class', 'cv-pdf-sidebar-bg cv-pdf-sidebar-bg--'.$side);
-                $background->setAttribute('aria-hidden', 'true');
-                $body->insertBefore($background, $body->firstChild);
-                $backgroundAdded = true;
             }
         }
     }

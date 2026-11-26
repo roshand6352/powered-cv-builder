@@ -1,13 +1,30 @@
-{{-- DomPDF only: sidebar colour column repeated on every page beside the floated sidebar. --}}
+{{-- DomPDF only: content-height sidebar colour beside the floated columns. --}}
 @php($darkSidebar = \App\Support\Cv\CvColor::readableTextColor($vars['--cv-sidebar-bg']) === '#ffffff')
 <style id="cv-pdf-dompdf-page-flow">
+/* Stretch the columns wrapper to the taller float so absolute sidebar bg matches content. */
+body.cv-pdf-export .cv-pdf-columns {
+    position: relative;
+}
+
+body.cv-pdf-export .cv-pdf-columns::after {
+    content: '';
+    display: block;
+    clear: both;
+    height: 0;
+}
+
 body.cv-pdf-export .cv-pdf-sidebar-bg {
-    position: fixed;
+    position: absolute;
     top: 0;
+    bottom: 0;
     width: 240px;
-    /* Must stay within the 1123px page box, otherwise DomPDF stops repeating it after page 1. */
-    height: 1120px;
+    height: auto;
+    margin: 0;
+    padding: 0;
     background: {{ $vars['--cv-sidebar-bg'] }};
+    z-index: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
 body.cv-pdf-export .cv-pdf-sidebar-bg--left {
