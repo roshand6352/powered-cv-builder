@@ -10,7 +10,9 @@ class StoreCoverLetterFromCvRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $user = $this->user();
+
+        return $user !== null && $user->hasCoverLetterAccess();
     }
 
     /**

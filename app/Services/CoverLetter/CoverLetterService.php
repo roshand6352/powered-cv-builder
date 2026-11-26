@@ -10,6 +10,7 @@ use App\Services\Ai\AiUsageService;
 use App\Services\BaseService;
 use App\Services\Subscription\SubscriptionService;
 use App\Support\Html\CoverLetterRichTextCleaner;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -39,6 +40,8 @@ class CoverLetterService extends BaseService
      */
     public function createForCv(User $user, Cv $cv, CvTemplate $template, array $attributes = []): CoverLetter
     {
+        $this->ensureCoverLetterAccess($user);
+
         $sender = $this->cvExtractor->senderBlock($cv);
         $companyName = $attributes['company_name'] ?? null;
         $title = $attributes['title'] ?? $this->cvExtractor->suggestedTitle($cv, $companyName);
@@ -102,6 +105,9 @@ class CoverLetterService extends BaseService
 
     public function duplicate(CoverLetter $coverLetter): CoverLetter
     {
+        $coverLetter->loadMissing('user');
+        $this->ensureCoverLetterAccess($coverLetter->user);
+
         $copy = $coverLetter->replicate([
             'slug',
             'created_at',
@@ -110,7 +116,6 @@ class CoverLetterService extends BaseService
         ]);
 
         $copy->title = Str::limit($coverLetter->title.' (Copy)', 250, '');
-        $coverLetter->loadMissing('user');
         $copy->slug = $this->uniqueSlug($coverLetter->user, $copy->title);
         $copy->status = 'draft';
         $copy->save();
@@ -163,6 +168,18 @@ class CoverLetterService extends BaseService
                 'subscription' => route('dashboard.subscription'),
             ],
         ];
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    protected function ensureCoverLetterAccess(User $user): void
+    {
+        if (! $user->hasCoverLetterAccess()) {
+            throw new AuthorizationException(
+                'Cover letters are available on paid plans. Upgrade to unlock this feature.'
+            );
+        }
     }
 
     protected function uniqueSlug(User $user, string $title): string

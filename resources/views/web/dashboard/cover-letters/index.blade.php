@@ -20,6 +20,9 @@
         x-data="coverLetterCreateModal({
             optionsUrl: @js(route('cover-letters.cv-options')),
             createCvUrl: @js(route('dashboard.cvs')),
+            subscriptionUrl: @js(route('dashboard.subscription')),
+            hasCoverLetterAccess: @js($hasCoverLetterAccess),
+            upgradeMessage: 'Cover letters are available on paid plans. Upgrade to unlock this feature.',
         })"
         @keydown.escape.window="open && close()"
         class="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
@@ -189,9 +192,19 @@
                         @foreach ($coverLetters as $coverLetter)
                             <tr class="hover:bg-cream/40">
                                 <td>
-                                    <a href="{{ route('cover-letters.edit', $coverLetter) }}" class="font-semibold text-navy hover:text-brand-600">
-                                        {{ $coverLetter->title }}
-                                    </a>
+                                    @if ($hasCoverLetterAccess)
+                                        <a href="{{ route('cover-letters.edit', $coverLetter) }}" class="font-semibold text-navy hover:text-brand-600">
+                                            {{ $coverLetter->title }}
+                                        </a>
+                                    @else
+                                        <button
+                                            type="button"
+                                            @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'Cover letters are available on paid plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                                            class="font-semibold text-navy hover:text-brand-600"
+                                        >
+                                            {{ $coverLetter->title }}
+                                        </button>
+                                    @endif
                                 </td>
                                 <td class="max-w-[10rem] truncate text-muted">{{ $coverLetter->cv?->title ?? '—' }}</td>
                                 <td class="max-w-[8rem] truncate text-muted">{{ $coverLetter->company_name ?: '—' }}</td>
@@ -200,22 +213,43 @@
                                 <td class="hidden whitespace-nowrap text-muted sm:table-cell">{{ $coverLetter->created_at?->format('M j, Y') }}</td>
                                 <td>
                                     <div class="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
-                                        <a
-                                            href="{{ route('cover-letters.edit', $coverLetter) }}"
-                                            class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
-                                        >Edit</a>
+                                        @if ($hasCoverLetterAccess)
+                                            <a
+                                                href="{{ route('cover-letters.edit', $coverLetter) }}"
+                                                class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                                            >Edit</a>
+                                        @else
+                                            <button
+                                                type="button"
+                                                @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'Cover letters are available on paid plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                                                class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                                            >Edit</button>
+                                        @endif
 
-                                        <form method="POST" action="{{ route('cover-letters.duplicate', $coverLetter) }}">
-                                            @csrf
-                                            <button type="submit" class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-navy hover:bg-cream">
+                                        @if ($hasCoverLetterAccess)
+                                            <form method="POST" action="{{ route('cover-letters.duplicate', $coverLetter) }}">
+                                                @csrf
+                                                <button type="submit" class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-navy hover:bg-cream">
+                                                    Duplicate
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button
+                                                type="button"
+                                                @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'Cover letters are available on paid plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                                                class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-navy hover:bg-cream"
+                                            >
                                                 Duplicate
                                             </button>
-                                        </form>
+                                        @endif
 
                                         <div
                                             x-data="coverLetterPdfDownload({
                                                 url: @js(route('pdf-exports.cover-letter.download', $coverLetter)),
                                                 filename: @js((Str::slug($coverLetter->title ?: 'cover-letter') ?: 'cover-letter').'.pdf'),
+                                                hasCoverLetterAccess: @js($hasCoverLetterAccess),
+                                                subscriptionUrl: @js(route('dashboard.subscription')),
+                                                upgradeMessage: 'Cover letters are available on paid plans. Upgrade to unlock this feature.',
                                                 initialError: @js(is_array($pdfFlashError) && ($pdfFlashError['slug'] ?? null) === $coverLetter->slug ? $pdfFlashError['message'] : null),
                                             })"
                                             class="relative"
@@ -274,4 +308,6 @@
             </div>
         </div>
     @endif
+
+    <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />
 </x-dashboard.layout>

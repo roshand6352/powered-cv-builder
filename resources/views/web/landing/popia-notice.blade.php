@@ -14,7 +14,7 @@
                 <p>ApplyDocs ZA is the responsible party for the personal information processed through this website and its CV Builder and Cover Letter tools.</p>
 
                 <h2>2. Information Officer</h2>
-                <p>Information Officer: [TO BE CONFIRMED]. Privacy queries can be sent to <a href="mailto:privacy@example.com">privacy@example.com</a> [TO BE CONFIRMED].</p>
+                <p>Information Officer:Privacy queries can be sent to <a href="mailto:privacy@example.com">privacy@example.com</a>.</p>
 
                 <h2>3. Personal information we collect</h2>
                 <p>We collect information you provide directly, including account details, CV and cover letter content, and communications with our support team. We also collect usage data to improve our services.</p>

@@ -46,11 +46,13 @@ class DashboardController extends Controller
 
     public function coverLetters(Request $request): View
     {
-        $cvs = $this->cvService->listForUser($request->user());
+        $user = $request->user();
+        $cvs = $this->cvService->listForUser($user);
 
         return view('web.dashboard.cover-letters.index', [
-            'coverLetters' => $this->coverLetterService->listForUser($request->user()),
+            'coverLetters' => $this->coverLetterService->listForUser($user),
             'cvs' => $cvs,
+            'hasCoverLetterAccess' => $user->hasCoverLetterAccess(),
         ]);
     }
 
@@ -73,9 +75,12 @@ class DashboardController extends Controller
 
     public function billing(Request $request): View
     {
+        $user = $request->user();
+
         return view('web.dashboard.billing.index', [
-            'payments' => $this->paymentService->historyForUser($request->user()),
-            'pdfExports' => $this->pdfExportService->historyForUser($request->user()),
+            'payments' => $this->paymentService->historyForUser($user),
+            'pdfExports' => $this->pdfExportService->historyForUser($user),
+            'hasCoverLetterAccess' => $user->hasCoverLetterAccess(),
         ]);
     }
 

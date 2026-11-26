@@ -7,6 +7,11 @@ return [
         'short' => 'ApplyDocs',
         'logo' => 'images/LOGO-02.png',
         'footer_logo' => 'images/LOGO-19.png',
+        // Light-on-dark wordmark for email headers (navy background).
+        'email_logo' => 'images/LOGO-19.png',
+        // Optional absolute HTTPS URL override (CDN / production). When empty,
+        // emails build an absolute URL from APP_URL / ASSET_URL + email_logo.
+        'email_logo_url' => env('MAIL_LOGO_URL'),
         'favicon' => 'LOGO-10.png',
     ],
 

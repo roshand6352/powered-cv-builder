@@ -24,7 +24,7 @@
                     @else
                         <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
                     @endif
-                    <span class="hero-trust-text">Trusted by <b>{{ $stats['trusted_users'] ?? '10,000' }}+</b> South Africans &nbsp;&middot;&nbsp; No card required</span>
+                    <span class="hero-trust-text">Trusted by </b> South Africans &nbsp;&middot;&nbsp; No card required</span>
                 </div>
             </div>
             <div class="hero-visual">
