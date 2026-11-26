@@ -64,8 +64,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/cvs/{cv}/template', [CvTemplateRenderController::class, 'switchTemplate'])->name('cvs.template.switch');
     Route::post('/cvs/{cv}/export/pdf', [PdfExportController::class, 'storeCv'])->name('pdf-exports.cv.store');
     Route::post('/cvs/{cv}/export/pdf/download', [PdfExportController::class, 'downloadCv'])->name('pdf-exports.cv.download');
-    Route::post('/cover-letters/{coverLetter}/export/pdf', [PdfExportController::class, 'storeCoverLetter'])->name('pdf-exports.cover-letter.store');
-    Route::post('/cover-letters/{coverLetter}/export/pdf/download', [PdfExportController::class, 'downloadCoverLetter'])->name('pdf-exports.cover-letter.download');
+    Route::post('/cover-letters/{coverLetter}/export/pdf', [PdfExportController::class, 'storeCoverLetter'])
+        ->middleware('cover-letter')
+        ->name('pdf-exports.cover-letter.store');
+    Route::post('/cover-letters/{coverLetter}/export/pdf/download', [PdfExportController::class, 'downloadCoverLetter'])
+        ->middleware('cover-letter')
+        ->name('pdf-exports.cover-letter.download');
     Route::get('/pdf-exports/{pdfExport}', [PdfExportController::class, 'show'])->name('pdf-exports.show');
     Route::get('/pdf-exports/{pdfExport}/download', [PdfExportController::class, 'download'])->name('pdf-exports.download');
 
@@ -77,7 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/skills/improve', [AiController::class, 'improveSkills'])->name('skills.improve');
         Route::post('/grammar-fix', [AiController::class, 'grammarFix'])->name('grammar-fix');
         Route::post('/cover-letter', [AiController::class, 'generateCoverLetter'])
-            ->middleware('premium')
+            ->middleware(['premium', 'cover-letter'])
             ->name('cover-letter');
     });
 
@@ -86,18 +90,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cover-letter-templates/{cvTemplate:slug}/preview', [CoverLetterController::class, 'preview'])->name('cover-letter-templates.preview');
 
     // Cover Letters — always linked to a specific CV.
-    Route::get('/cover-letters/cv-options', [CoverLetterController::class, 'cvOptions'])->name('cover-letters.cv-options');
-    Route::get('/cvs/{cv}/cover-letters/create', [CoverLetterController::class, 'create'])->name('cvs.cover-letters.create');
-    Route::post('/cvs/{cv}/cover-letters', [CoverLetterController::class, 'store'])->name('cvs.cover-letters.store');
+    // Create / edit / download require a plan with cover_letter_enabled. Delete stays open for cleanup.
+    Route::middleware('cover-letter')->group(function () {
+        Route::get('/cover-letters/cv-options', [CoverLetterController::class, 'cvOptions'])->name('cover-letters.cv-options');
+        Route::get('/cvs/{cv}/cover-letters/create', [CoverLetterController::class, 'create'])->name('cvs.cover-letters.create');
+        Route::post('/cvs/{cv}/cover-letters', [CoverLetterController::class, 'store'])->name('cvs.cover-letters.store');
+        Route::post('/cover-letters/{coverLetter}/duplicate', [CoverLetterController::class, 'duplicate'])->name('cover-letters.duplicate');
+        Route::get('/cover-letters/{coverLetter}/edit', [CoverLetterBuilderController::class, 'edit'])->name('cover-letters.edit');
+        Route::put('/cover-letters/{coverLetter}', [CoverLetterBuilderController::class, 'update'])->name('cover-letters.update');
+        Route::patch('/cover-letters/{coverLetter}/autosave', [CoverLetterBuilderController::class, 'autosave'])->name('cover-letters.autosave');
+        Route::post('/cover-letters/{coverLetter}/render', [CoverLetterBuilderController::class, 'render'])->name('cover-letters.render');
+        Route::post('/cover-letters/{coverLetter}/ai', [CoverLetterAiController::class, 'generate'])
+            ->middleware('premium')
+            ->name('cover-letters.ai');
+    });
 
-    Route::get('/cover-letters/{coverLetter}/edit', [CoverLetterBuilderController::class, 'edit'])->name('cover-letters.edit');
-    Route::put('/cover-letters/{coverLetter}', [CoverLetterBuilderController::class, 'update'])->name('cover-letters.update');
-    Route::patch('/cover-letters/{coverLetter}/autosave', [CoverLetterBuilderController::class, 'autosave'])->name('cover-letters.autosave');
-    Route::post('/cover-letters/{coverLetter}/render', [CoverLetterBuilderController::class, 'render'])->name('cover-letters.render');
-    Route::post('/cover-letters/{coverLetter}/ai', [CoverLetterAiController::class, 'generate'])
-        ->middleware('premium')
-        ->name('cover-letters.ai');
-    Route::post('/cover-letters/{coverLetter}/duplicate', [CoverLetterController::class, 'duplicate'])->name('cover-letters.duplicate');
     Route::delete('/cover-letters/{coverLetter}', [CoverLetterController::class, 'destroy'])->name('cover-letters.destroy');
 
     Route::prefix('subscription')->name('subscription.')->group(function () {

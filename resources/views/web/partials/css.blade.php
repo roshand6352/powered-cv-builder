@@ -280,7 +280,7 @@ footer{background:var(--navy-dark);padding:64px 0 32px}
 .form-note{font-size:12px;color:var(--text-muted);text-align:center;margin-top:14px}
 .form-error{font-size:13px;color:#b03a2e;margin-top:6px;list-style:none;padding:0}
 .form-error li+li{margin-top:4px}
-.form-status{font-size:13px;color:#1e7e4a;margin-bottom:16px;padding:12px 14px;background:var(--orange-pale);border:1px solid var(--orange-mid);border-radius:var(--radius-sm)}
+.form-status{font-size:13px;color:var(--orange);margin-bottom:16px;padding:12px 14px;background:var(--orange-pale);border:1px solid var(--orange-mid);border-radius:var(--radius-sm)}
 .form-row-between{display:flex;flex-direction:column;gap:14px;margin-top:22px}
 .checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);cursor:pointer}
 .checkbox-row input{width:16px;height:16px;accent-color:var(--orange)}

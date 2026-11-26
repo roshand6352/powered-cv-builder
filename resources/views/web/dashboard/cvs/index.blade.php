@@ -3,6 +3,7 @@
         $hasLinkedinImportAccess = ! app(\App\Services\Subscription\SubscriptionService::class)
             ->resolveActivePlan(auth()->user())
             ->isFree();
+        $hasCoverLetterAccess = auth()->user()->hasCoverLetterAccess();
     @endphp
 
     <x-slot name="header">
@@ -170,9 +171,19 @@
                                     Change template
                                 </a>
                             @endif
-                            <a href="{{ route('cvs.cover-letters.create', $cv) }}" class="dash-btn-secondary px-3 py-2">
-                                Cover letter
-                            </a>
+                            @if ($hasCoverLetterAccess)
+                                <a href="{{ route('cvs.cover-letters.create', $cv) }}" class="dash-btn-secondary px-3 py-2">
+                                    Cover letter
+                                </a>
+                            @else
+                                <button
+                                    type="button"
+                                    @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'Cover letters are available on paid plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                                    class="dash-btn-secondary px-3 py-2"
+                                >
+                                    Cover letter
+                                </button>
+                            @endif
                         </div>
                     </article>
                 @endforeach

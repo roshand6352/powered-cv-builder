@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'premium' => \App\Http\Middleware\EnsurePremiumPlan::class,
+            'cover-letter' => \App\Http\Middleware\EnsureCoverLetterAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

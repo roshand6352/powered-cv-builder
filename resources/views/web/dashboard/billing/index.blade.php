@@ -17,11 +17,17 @@
             </div>
 
             @php
-                $libraryItems = $pdfExports->map(function ($export) {
+                $hasCoverLetterAccess = $hasCoverLetterAccess ?? false;
+                $libraryItems = $pdfExports->map(function ($export) use ($hasCoverLetterAccess) {
+                    $isCoverLetter = $export->type === \App\Enums\PdfExportType::CoverLetter;
+                    $canDownload = $export->isDownloadable()
+                        && (! $isCoverLetter || $hasCoverLetterAccess);
+
                     return (object) [
                         'export' => $export,
                         'title' => $export->exportable?->title ?: $export->filename,
-                        'icon' => $export->type === \App\Enums\PdfExportType::CoverLetter ? 'mail' : 'document',
+                        'icon' => $isCoverLetter ? 'mail' : 'document',
+                        'isCoverLetter' => $isCoverLetter,
                         'statusClasses' => match ($export->status->value) {
                             'completed' => 'dash-badge-brand',
                             'failed' => 'dash-badge bg-red-50 text-red-700',
@@ -30,7 +36,8 @@
                         },
                         'date' => ($export->completed_at ?? $export->created_at)?->format('M j, Y g:i A'),
                         'size' => $export->file_size ? \Illuminate\Support\Number::fileSize($export->file_size, precision: 1) : null,
-                        'downloadUrl' => $export->isDownloadable() ? route('pdf-exports.download', $export) : null,
+                        'downloadUrl' => $canDownload ? route('pdf-exports.download', $export) : null,
+                        'requiresCoverLetterUpgrade' => $isCoverLetter && $export->isDownloadable() && ! $hasCoverLetterAccess,
                     ];
                 });
             @endphp
@@ -80,6 +87,17 @@
                                     </svg>
                                     Download PDF
                                 </a>
+                            @elseif ($item->requiresCoverLetterUpgrade)
+                                <button
+                                    type="button"
+                                    @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'Cover letters are available on paid plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                                    class="dash-btn-secondary mt-4 w-full gap-2"
+                                >
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12M12 16.5V3" />
+                                    </svg>
+                                    Download PDF
+                                </button>
                             @endif
                         </li>
                     @endforeach
@@ -124,6 +142,14 @@
                                             <a href="{{ $item->downloadUrl }}" class="font-semibold text-brand-600 hover:text-brand-700">
                                                 Download
                                             </a>
+                                        @elseif ($item->requiresCoverLetterUpgrade)
+                                            <button
+                                                type="button"
+                                                @click="window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', { detail: { message: 'Cover letters are available on paid plans. Upgrade to unlock this feature.', url: '{{ route('dashboard.subscription') }}' } }))"
+                                                class="font-semibold text-brand-600 hover:text-brand-700"
+                                            >
+                                                Download
+                                            </button>
                                         @else
                                             <span class="text-muted/60">—</span>
                                         @endif
@@ -196,4 +222,6 @@
             @endif
         </section>
     </div>
+
+    <x-ai-upgrade-modal :default-url="route('dashboard.subscription')" />
 </x-dashboard.layout>

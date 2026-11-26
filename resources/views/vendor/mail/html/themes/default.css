@@ -119,10 +119,10 @@ img {
 /* Logo */
 
 .logo {
-    height: auto;
+    height: 33px;
     margin-top: 0;
     margin-bottom: 0;
-    max-height: 48px;
+    max-height: 33px;
     max-width: 180px;
     width: 180px;
 }

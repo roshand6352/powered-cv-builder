@@ -12,11 +12,26 @@ export function registerCoverLetterListing() {
     Alpine.data('coverLetterPdfDownload', (config = {}) => ({
         url: config.url ?? '',
         filename: config.filename ?? 'cover-letter.pdf',
+        hasCoverLetterAccess: config.hasCoverLetterAccess ?? false,
+        subscriptionUrl: config.subscriptionUrl ?? '',
+        upgradeMessage: config.upgradeMessage
+            ?? 'Cover letters are available on paid plans. Upgrade to unlock this feature.',
         status: config.initialError ? 'error' : 'idle',
         error: config.initialError ?? null,
         ...cvPdfReadySheet(),
 
         async download() {
+            if (! this.hasCoverLetterAccess) {
+                window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', {
+                    detail: {
+                        message: this.upgradeMessage,
+                        url: this.subscriptionUrl,
+                    },
+                }));
+
+                return;
+            }
+
             if (this.status === 'loading' || ! this.url) {
                 return;
             }
@@ -41,6 +56,10 @@ export function registerCoverLetterListing() {
     Alpine.data('coverLetterCreateModal', (config = {}) => ({
         optionsUrl: config.optionsUrl ?? '',
         createCvUrl: config.createCvUrl ?? '',
+        subscriptionUrl: config.subscriptionUrl ?? '',
+        hasCoverLetterAccess: config.hasCoverLetterAccess ?? false,
+        upgradeMessage: config.upgradeMessage
+            ?? 'Cover letters are available on paid plans. Upgrade to unlock this feature.',
         open: false,
         state: 'idle', // idle | loading | ready | error
         cvs: [],
@@ -65,6 +84,17 @@ export function registerCoverLetterListing() {
         },
 
         show() {
+            if (! this.hasCoverLetterAccess) {
+                window.dispatchEvent(new CustomEvent('open-ai-upgrade-modal', {
+                    detail: {
+                        message: this.upgradeMessage,
+                        url: this.subscriptionUrl,
+                    },
+                }));
+
+                return;
+            }
+
             this.open = true;
             this.search = '';
             this.selectedId = null;
